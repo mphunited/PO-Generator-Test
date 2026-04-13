@@ -346,6 +346,8 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 
   /* Import panel */
   .import-instructions { display: none; }
+  /* Main screen instruction boxes */
+  .main-screen-instructions { display: none; }
   .import-topbar { padding: 0 14px; height: 52px; }
   .import-title { font-size: 12px; letter-spacing: 0.5px; }
   .import-subtitle { display: none; }
@@ -384,7 +386,6 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
   <div class="topbar-right">
     <div class="topbar-stat">Customers: <span>183</span></div>
     <div class="topbar-stat">Vendors: <span>20</span></div>
-    <button onclick="openSignatureModal()" title="Set Email Signature" style="background:transparent;border:1px solid rgba(242,237,230,0.25);border-radius:6px;color:rgba(242,237,230,0.7);padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Aptos','Inter',sans-serif;letter-spacing:0.5px;transition:all 0.2s;" onmouseover="this.style.background='rgba(242,237,230,0.1)'" onmouseout="this.style.background='transparent'">✍ Signature</button>
     <div class="topbar-module">PO System v3</div>
   </div>
 </div>
@@ -667,7 +668,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 
   <!-- ═══ MAIN OUTPUT ═══ -->
   <div class="main">
-    <div class="no-print" style="display:flex;gap:10px;margin-bottom:14px;align-items:stretch;">
+    <div class="no-print main-screen-instructions" style="display:flex;gap:10px;margin-bottom:14px;align-items:stretch;">
       <div style="flex:1;background:#eaf4ee;border:1px solid #7abf95;border-radius:8px;padding:12px 16px;font-size:13px;color:#1a4a2e;line-height:1.7;">
         <strong>📂 How to Import PO Requests:</strong><br>
         <strong>1.</strong> Click <em>Import PO Requests from Excel</em>.<br>
@@ -1112,16 +1113,15 @@ async function printPO() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving PDF…'; }
   showToast('Building PDF — please wait…', 8000);
   try {
-    await html2pdf()
-      .set({
+    await withPaperAtTop(paper, () =>
+      html2pdf().set({
         margin: [0.45, 0.45, 0.45, 0.45],
         filename: 'MPH PO ' + (mphPONum || 'Document') + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: pdfCanvasOpts(),
+        html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      })
-      .from(paper)
-      .save();
+      }).from(paper).save()
+    );
     showToast('✅ PDF saved!', 3000);
   } catch(e) {
     console.error('printPO error:', e);
@@ -1574,9 +1574,10 @@ async function openInOutlook(idx) {
         if (paper) {
           try {
             showToast('⏳ Generating PDF attachment…', 8000);
-            const pdfBlob = await html2pdf()
-              .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:pdfCanvasOpts(), jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
-              .from(paper).output('blob');
+            const pdfBlob = await withPaperAtTop(paper, () =>
+              html2pdf().set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
+                .from(paper).output('blob')
+            );
             const b64 = await blobToBase64(pdfBlob);
             await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (mphPONum||'') + '.pdf', b64);
           } catch(pdfErr) { console.warn('PDF attach failed:', pdfErr); }
@@ -2016,20 +2017,36 @@ async function attachFileToDraft(token, messageId, filename, base64Content) {
   if (!r.ok) throw new Error('Attach ' + r.status);
 }
 
-// ── PDF canvas options ───────────────────────────────────────────────────────
-// html2canvas needs to know the current scroll offset so it correctly positions
-// the element in the canvas.  Without scrollY adjustment it captures from the
-// document's y=0, producing a mostly-blank canvas when the element is far down
-// the page.  scrollX/scrollY = -window.scroll* tells html2canvas to offset the
-// render window to the element's actual position.
-function pdfCanvasOpts() {
-  return {
-    scale: 2,
-    useCORS: true,
-    logging: false,
-    scrollX: -window.scrollX,
-    scrollY: -window.scrollY
-  };
+// ── PDF capture helper ───────────────────────────────────────────────────────
+// html2canvas captures an element relative to the whole document, which means
+// a poPaper buried deep in the DOM produces a PDF with a large blank area at
+// the top.  The fix: temporarily move the element to be the FIRST child of
+// <body> (document y ≈ 0), capture it, then restore it.  This is scroll-
+// position independent and works identically on desktop and mobile.
+async function withPaperAtTop(paper, fn) {
+  const parent      = paper.parentNode;
+  const nextSibling = paper.nextSibling;
+  const savedStyle  = paper.style.cssText || '';
+  // Measure width before moving — offsetWidth is 0 when inside a hidden panel
+  const w = paper.offsetWidth || paper.scrollWidth || 760;
+
+  // Move to top of <body>
+  document.body.insertBefore(paper, document.body.firstChild);
+  paper.style.cssText = 'position:static;margin:0;width:' + w + 'px;';
+  window.scrollTo(0, 0);
+
+  // Give the browser two frames to recalculate layout before html2canvas fires
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  try {
+    return await fn();
+  } finally {
+    paper.style.cssText = savedStyle;
+    if (parent) {
+      if (nextSibling) parent.insertBefore(paper, nextSibling);
+      else             parent.appendChild(paper);
+    }
+  }
 }
 
 // Converts a Blob to a base64 string (no data-URL prefix).
@@ -2832,10 +2849,9 @@ async function loadSplitAndRegular() {
   const emailPanelHtml =
     `<div class="output-panel" id="mpo-panel-2">
       <div class="po-actions no-print">
-        <button class="btn-action" id="mpo-copyV" onclick="copyMultiPOEmail('mpo-copyV')">📋 Copy HTML Body</button>
-        <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Open Email (then paste body)</button>
+        <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
       </div>
-      <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Click <em>Open Email</em> to create a draft with both PO PDFs automatically attached.</div>
+      <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Creates a draft in Outlook with both PO PDFs automatically attached — ready to review and send.</div>
       <div class="email-preview" id="mpo-emailDiv"></div>
     </div>`;
 
@@ -2843,11 +2859,8 @@ async function loadSplitAndRegular() {
     <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
       <div style="flex:1;">
         <strong>📋 Split &amp; Regular Load — How to send:</strong><br>
-        <strong>1.</strong> Click <em>Save Split Load PO PDF</em> and <em>Save Regular PO PDF</em> on each tab, <em>or</em> click <em>⬇ Download All as ZIP</em> for both at once.<br>
-        <strong>2.</strong> Click <em>Vendor Email</em>, then <em>Open Email</em> — the draft auto-attaches both PDFs and fills the email body.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
-        <button id="btn-download-all-pos" onclick="downloadAllMultiPOs()" style="background:#2d6a4f;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#3a8a65'" onmouseout="this.style.background='#2d6a4f'">⬇ Download All as ZIP</button>
+        <strong>1.</strong> Click the <em>Vendor Email</em> tab, then click <em>Send POs to Outlook in Browser</em> — both PDFs are attached automatically.<br>
+        <strong>2.</strong> Or save each PDF individually by clicking <em>Save PO PDF</em> on each tab.
       </div>
     </div>
     <div class="output-tabs">${tabsHtml}</div>
@@ -2949,10 +2962,9 @@ async function generateMultiplePOs(fromCheckbox = false) {
   const combinedHtml = buildMultiPOVendorEmailHtml(orders, poNums, vendor);
   panelsHtml += `<div class="output-panel" id="mpo-panel-${orders.length}">
     <div class="po-actions no-print">
-      <button class="btn-action" id="mpo-copyV" onclick="copyMultiPOEmail('mpo-copyV')">📋 Copy HTML Body</button>
-      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Open Email (then paste body)</button>
+      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
     </div>
-    <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Click <em>Open Email</em> to create a draft with all PO PDFs automatically attached.</div>
+    <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Creates a draft in Outlook with all PO PDFs automatically attached — ready to review and send.</div>
     <div class="email-preview" id="mpo-emailDiv"></div>
   </div>`;
 
@@ -2960,11 +2972,10 @@ async function generateMultiplePOs(fromCheckbox = false) {
     <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
       <div style="flex:1;">
         <strong>📋 Multiple POs — How to send:</strong><br>
-        <strong>1.</strong> Click <em>⬇ Download All as ZIP</em> to get all POs in one ZIP file, <em>or</em> click each PO tab and <em>Save PO PDF</em> individually.<br>
-        <strong>2.</strong> Click <em>Vendor Email</em>, then <em>Copy HTML Body</em>, then <em>Open Email</em> and paste. Attach all saved PDFs manually.
+        <strong>1.</strong> Click the <em>Vendor Email</em> tab, then click <em>Send POs to Outlook in Browser</em> — all PDFs are attached automatically.<br>
+        <strong>2.</strong> Or save each PDF individually by clicking <em>Save PO PDF</em> on each PO tab.
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
-        <button id="btn-download-all-pos" onclick="downloadAllMultiPOs()" style="background:#2d6a4f;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#3a8a65'" onmouseout="this.style.background='#2d6a4f'">⬇ Download All as ZIP</button>
         <button onclick="generateMultiplePOs(true)" style="background:#1a3a6e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#254d91'" onmouseout="this.style.background='#1a3a6e'">↻ Regenerate POs</button>
       </div>
     </div>
@@ -2998,16 +3009,15 @@ async function printMultiPO(idx, poNum) {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving PDF…'; }
   showToast('Building PDF — please wait…', 8000);
   try {
-    await html2pdf()
-      .set({
+    await withPaperAtTop(paper, () =>
+      html2pdf().set({
         margin: [0.45, 0.45, 0.45, 0.45],
         filename: 'MPH PO ' + (poNum || ('Document-' + idx)) + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: pdfCanvasOpts(),
+        html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      })
-      .from(paper)
-      .save();
+      }).from(paper).save()
+    );
     showToast('✅ PDF saved!', 3000);
   } catch(e) {
     console.error('printMultiPO error:', e);
@@ -3030,15 +3040,14 @@ async function downloadAllMultiPOs() {
       const poNum = lastMultiPOPoNums[i];
       if (btn) btn.textContent = '⏳ PDF ' + (i + 1) + ' of ' + count + '…';
       // Generate as blob (no download triggered yet)
-      const blob = await html2pdf()
-        .set({
+      const blob = await withPaperAtTop(paper, () =>
+        html2pdf().set({
           margin: [0.45, 0.45, 0.45, 0.45],
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: pdfCanvasOpts(),
+          html2canvas: { scale: 2, useCORS: true, logging: false },
           jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        })
-        .from(paper)
-        .output('blob');
+        }).from(paper).output('blob')
+      );
       zip.file('MPH PO ' + poNum + '.pdf', blob);
     }
     if (btn) btn.textContent = '⏳ Packaging ZIP…';
@@ -3094,9 +3103,10 @@ async function openMultiPOEmail() {
             const paper = document.getElementById('mpo-paper-' + i);
             if (!paper) continue;
             try {
-              const pdfBlob = await html2pdf()
-                .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:pdfCanvasOpts(), jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
-                .from(paper).output('blob');
+              const pdfBlob = await withPaperAtTop(paper, () =>
+                html2pdf().set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
+                  .from(paper).output('blob')
+              );
               const b64 = await blobToBase64(pdfBlob);
               await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (lastMultiPOPoNums[i]||i) + '.pdf', b64);
             } catch(pdfErr) { console.warn('PDF attach failed for PO ' + i + ':', pdfErr); }
