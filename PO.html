@@ -403,7 +403,8 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <strong>1)</strong> For single orders, click the order and then click <em>Load into PO Builder</em>.&nbsp;&nbsp;
     <strong>2)</strong> For split orders, click all the orders and then click <em>Load as Split Load</em>.&nbsp;&nbsp;
     <strong>3)</strong> For split loads that need multiple PO numbers on one PO, click all the orders (up to 4) and then click <em>Split Load/Multiple PO Numbers</em>.&nbsp;&nbsp;
-    <strong>4)</strong> For multiple independent POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
+    <strong>4)</strong> For a split load <em>plus</em> a separate regular load (same vendor), select the split rows first then the regular row (3–4 rows total), then click <em>Load Split &amp; Regular Load</em> — generates two POs and one combined vendor email.&nbsp;&nbsp;
+    <strong>5)</strong> For multiple independent POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
     <strong>5)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
     <strong>5)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong>, <strong>PO Revision to Accounting</strong>, or <strong>PO Moving</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
   </div>
@@ -444,6 +445,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <div style="display:flex;gap:8px;">
       <button class="btn-load-order" id="btnLoadSplit" onclick="loadAsSplitLoad()" disabled style="background:var(--green);display:none;">⚡ Load as Split Load →</button>
       <button class="btn-load-order" id="btnSplitMultiPO" onclick="loadSplitAndGenerateMultiple()" disabled style="background:#6a3a9e;color:#fff;display:none;">⚡# Split Load/Multiple PO Numbers →</button>
+      <button class="btn-load-order" id="btnSplitRegular" onclick="loadSplitAndRegular()" disabled style="background:#c05c00;color:#fff;display:none;">⚡+ Load Split &amp; Regular Load →</button>
       <button class="btn-load-order" id="btnMultiPO" onclick="generateMultiplePOs()" disabled style="background:#1a3a6e;color:#fff;display:none;">📄 Generate Multiple POs →</button>
       <button class="btn-load-order" id="btnLoadOrder" onclick="loadSelectedOrder()" disabled>Load into PO Builder →</button>
     </div>
@@ -1109,6 +1111,7 @@ async function printPO() {
   const origText = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving PDF…'; }
   showToast('Building PDF — please wait…', 8000);
+  const pdfClone = preparePdfClone(paper);
   try {
     await html2pdf()
       .set({
@@ -1118,12 +1121,14 @@ async function printPO() {
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       })
-      .from(paper)
+      .from(pdfClone)
       .save();
     showToast('✅ PDF saved!', 3000);
   } catch(e) {
     console.error('printPO error:', e);
     showToast('Error saving PDF. Try again.', 4000);
+  } finally {
+    cleanupPdfClone(pdfClone);
   }
   if (btn) { btn.disabled = false; btn.textContent = origText; }
 }
@@ -1572,9 +1577,13 @@ async function openInOutlook(idx) {
         if (paper) {
           try {
             showToast('⏳ Generating PDF attachment…', 8000);
-            const pdfBlob = await html2pdf()
-              .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
-              .from(paper).output('blob');
+            const pdfClone1 = preparePdfClone(paper);
+            let pdfBlob;
+            try {
+              pdfBlob = await html2pdf()
+                .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
+                .from(pdfClone1).output('blob');
+            } finally { cleanupPdfClone(pdfClone1); }
             const b64 = await blobToBase64(pdfBlob);
             await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (mphPONum||'') + '.pdf', b64);
           } catch(pdfErr) { console.warn('PDF attach failed:', pdfErr); }
@@ -1742,7 +1751,7 @@ const MSAL_CONFIG = {
   auth: {
     clientId: "b907c7ac-306b-4b00-b9a6-c639d581d98f",
     authority: "https://login.microsoftonline.com/3abf2937-e518-43e5-b2a4-456eecfa8b00",
-    redirectUri: "https://mphunited.github.io/Generate/PO.html",
+    redirectUri: "https://mphunited.github.io/PO-Generator-Test/PO.html", // TEMP — revert to /Generate/PO.html before production push
   },
   cache: { cacheLocation: "sessionStorage" }
 };
@@ -2014,6 +2023,21 @@ async function attachFileToDraft(token, messageId, filename, base64Content) {
   if (!r.ok) throw new Error('Attach ' + r.status);
 }
 
+// ── PDF clone helpers ────────────────────────────────────────────────────────
+// html2canvas captures an element at its absolute document position, which
+// means a poPaper div that is deep in the DOM produces a PDF with a large
+// blank area above the content.  The fix: clone the element, park the clone
+// off-screen at y=0, capture from the clone, then discard it.
+function preparePdfClone(paper) {
+  const clone = paper.cloneNode(true);
+  clone.style.cssText = 'position:fixed;top:0;left:-9999px;margin:0;z-index:-1;width:' + paper.offsetWidth + 'px;background:white;';
+  document.body.appendChild(clone);
+  return clone;
+}
+function cleanupPdfClone(clone) {
+  if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+}
+
 // Converts a Blob to a base64 string (no data-URL prefix).
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
@@ -2130,6 +2154,8 @@ function switchImportSource(src) {
   document.getElementById("btnLoadOrder").disabled  = true;
   document.getElementById("btnLoadSplit").style.display = "none";
   document.getElementById("btnLoadSplit").disabled  = true;
+  document.getElementById("btnSplitRegular").style.display = "none";
+  document.getElementById("btnSplitRegular").disabled = true;
   const vf = document.getElementById("filterVendorSheet");
   vf.innerHTML = '<option value="">All Vendors</option>'; vf.disabled = true;
   document.getElementById("importSearch").value = ""; document.getElementById("importSearch").disabled = true;
@@ -2316,6 +2342,8 @@ function filterImportTable() {
   document.getElementById("btnLoadSplit").disabled = true;
   document.getElementById("btnSplitMultiPO").style.display = "none";
   document.getElementById("btnSplitMultiPO").disabled = true;
+  document.getElementById("btnSplitRegular").style.display = "none";
+  document.getElementById("btnSplitRegular").disabled = true;
   document.getElementById("importFooterHint").textContent = "Select 1 row to load • Select up to 4 rows for Split Loads";
   renderImportTable();
 }
@@ -2385,6 +2413,7 @@ function updateImportFooter() {
   const btnLoad = document.getElementById("btnLoadOrder");
   const btnSplit = document.getElementById("btnLoadSplit");
   const btnSplitMulti = document.getElementById("btnSplitMultiPO");
+  const btnSplitReg = document.getElementById("btnSplitRegular");
   const btnMulti = document.getElementById("btnMultiPO");
   const hint = document.getElementById("importFooterHint");
   const count = importSelectedIdxs.length;
@@ -2392,6 +2421,7 @@ function updateImportFooter() {
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
+    btnSplitReg.style.display = "none"; btnSplitReg.disabled = true;
     btnMulti.style.display = "none"; btnMulti.disabled = true;
     hint.textContent = "Select 1 row to load • Select up to 4 rows for Split Loads • Select up to 20 for Multiple POs";
     return;
@@ -2402,20 +2432,30 @@ function updateImportFooter() {
     btnLoad.disabled = false;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
+    btnSplitReg.style.display = "none"; btnSplitReg.disabled = true;
     btnMulti.style.display = "none"; btnMulti.disabled = true;
     const d = o1.desc||"";
     hint.textContent = "Selected: " + o1.customer + " — " + d.slice(0,55) + (d.length>55?"…":"") + " • Click more rows for Split Load or Multiple POs";
+  } else if (count === 2) {
+    btnLoad.disabled = true;
+    btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
+    btnSplitMulti.style.display = "inline-block"; btnSplitMulti.disabled = false;
+    btnSplitReg.style.display = "none"; btnSplitReg.disabled = true; // needs ≥3
+    btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
+    hint.textContent = "⚡ Split Load or ⚡# Split+Multi or 📄 Multiple POs (" + count + "): " + names + " • Click another row to add (or select Split & Regular Load with 3–4 rows)";
   } else if (count <= 4) {
     btnLoad.disabled = true;
     btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
     btnSplitMulti.style.display = "inline-block"; btnSplitMulti.disabled = false;
+    btnSplitReg.style.display = "inline-block"; btnSplitReg.disabled = false;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
-    hint.textContent = "⚡ Split Load or ⚡📄 Split+Multi or 📄 Multiple POs (" + count + "): " + names + (count < 4 ? " • Click another row to add (max 4 for Split Load, max 20 for Multiple POs)" : " • Split Load max reached — click more rows for Multiple POs only");
+    hint.textContent = "⚡ Split Load | ⚡# Split+Multi | ⚡+ Split & Regular | 📄 Multiple POs (" + count + "): " + names + (count < 4 ? " • Click another row to add" : " • Max reached for Split modes");
   } else {
     // 5–20: Multiple POs only (Split Load capped at 4)
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
+    btnSplitReg.style.display = "none"; btnSplitReg.disabled = true;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
     hint.textContent = "📄 Multiple POs (" + count + "): " + names + (count < 20 ? " • Click another row to add (max 20)" : " • Max 20 reached");
   }
@@ -2668,6 +2708,173 @@ async function loadSplitAndGenerateMultiple() {
   await generatePO();
 }
 
+// ── Split + Regular Load ───────────────────────────────────────────────────
+// Generates TWO POs from a 3–4 row selection:
+//   • PO 1 (Split Load)  — rows 0..N-2 combined into one PO with SPLIT LOAD line items
+//   • PO 2 (Regular)     — last row as a standard single-line PO
+// One combined vendor email covers both.
+async function loadSplitAndRegular() {
+  const allIdxs = importSelectedIdxs.slice();
+  if (allIdxs.length < 3 || allIdxs.length > 4) {
+    showToast('Select 3 or 4 rows: the first 2–3 are the split load, the last is the regular load.', 5000);
+    return;
+  }
+  const splitIdxs   = allIdxs.slice(0, -1);   // all but last
+  const regularIdx  = allIdxs[allIdxs.length - 1]; // last
+  const splitRaws   = splitIdxs.map(i => importFiltered[i]);
+  const regularRaw  = importFiltered[regularIdx];
+  const pp = s => parseFloat(parseNum(s)) || 0;
+
+  const vk = matchVendorKey(splitRaws[0].vendor, splitRaws[0].sheet);
+  const vendor = VENDORS[vk] || { name: splitRaws[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
+
+  document.getElementById("isBlindShipment").checked = false;
+  document.getElementById("isRevised").checked = false;
+  document.getElementById("isMoveOrders").checked = false;
+  document.getElementById("revisedPOField").style.display = "none";
+  document.getElementById("revisedPONum").value = "";
+
+  setLoading(true, 'Building Split & Regular POs…', 'Generating PO numbers');
+  closeImport();
+
+  // Assign two PO numbers
+  const splitPoNum   = await genPONum();
+  const regularPoNum = await genPONum();
+  lastMultiPOPoNums  = [splitPoNum, regularPoNum];
+  lastMultiPOMode    = 'splitRegular';
+
+  // Notes for the split PO — merge unique notes with per-load labels if they differ
+  const allRawNotes   = splitRaws.map(o => (o.po_notes||'').trim()).filter(Boolean);
+  const uniqueNotes   = allRawNotes.filter((v,i,a) => a.indexOf(v)===i);
+  let splitNotes;
+  if (uniqueNotes.length === 1) {
+    splitNotes = uniqueNotes[0];
+  } else {
+    splitNotes = splitRaws.map((o,idx) => {
+      const n = (o.po_notes||'').trim();
+      return n ? 'Split Load ' + (idx+1) + ': ' + n : null;
+    }).filter(Boolean).join('\n\n');
+  }
+
+  const splitO1 = splitRaws[0];
+  const splitOrderObj = {
+    customerName: splitO1.customer || '',
+    customerPO: splitO1.cust_po || 'N/A',
+    orderDate: fmtDate(new Date().toISOString().split('T')[0]),
+    shipTo: splitO1.ship_to || '--',
+    customerEmail: parseCustomerContacts(splitO1.contacts).email,
+    customerContactFmt: parseCustomerContacts(splitO1.contacts).toFmt,
+    customerContactCc: parseCustomerContacts(splitO1.contacts).cc,
+    shipDate: fmtDate(splitO1.ship_date),
+    shipVia: splitO1.freight || '',
+    apptTime: splitO1.appt || '',
+    salesOrder: splitO1.alliance_so || '',
+    specialInstructions: splitNotes,
+    isRevised: false, isBlind: false,
+    isCoastal: (splitO1.source==='recycling' && splitO1.sheet==='Coastal Container'),
+    vendor,
+    lines: splitRaws.map((o, idx) => ({
+      desc: 'SPLIT LOAD ' + (idx+1) + ' \u2014 ' + (o.desc || ''),
+      pn: o.pn || '',
+      qty: pp(o.qty) || 1,
+      price: pp(o.buy),
+      sell: pp(o.sell)
+    })),
+    get total() { return this.lines.reduce((s,l) => s + l.qty * l.price, 0); }
+  };
+
+  const regOrderObj = {
+    customerName: regularRaw.customer || '',
+    customerPO: regularRaw.cust_po || 'N/A',
+    orderDate: fmtDate(new Date().toISOString().split('T')[0]),
+    shipTo: regularRaw.ship_to || '--',
+    customerEmail: parseCustomerContacts(regularRaw.contacts).email,
+    customerContactFmt: parseCustomerContacts(regularRaw.contacts).toFmt,
+    customerContactCc: parseCustomerContacts(regularRaw.contacts).cc,
+    shipDate: fmtDate(regularRaw.ship_date),
+    shipVia: regularRaw.freight || '',
+    apptTime: regularRaw.appt || '',
+    salesOrder: regularRaw.alliance_so || '',
+    specialInstructions: regularRaw.po_notes || '',
+    isRevised: false, isBlind: false,
+    isCoastal: (regularRaw.source==='recycling' && regularRaw.sheet==='Coastal Container'),
+    vendor,
+    lines: [{ desc: regularRaw.desc||'IBC Product', pn: regularRaw.pn||'', qty: pp(regularRaw.qty)||1, price: pp(regularRaw.buy), sell: pp(regularRaw.sell) }],
+    get total() { return this.lines.reduce((s,l) => s + l.qty * l.price, 0); }
+  };
+
+  const orders  = [splitOrderObj, regOrderObj];
+  const poNums  = [splitPoNum, regularPoNum];
+  lastMultiPORawOrders = [...splitRaws, regularRaw];
+
+  setLoading(false);
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('poDocument').classList.remove('active');
+
+  const multiDoc = document.getElementById('multiPODocument');
+
+  const tabsHtml =
+    `<button class="output-tab active" onclick="switchMultiTab(0,this)">📄 Split Load PO (${splitPoNum})</button>` +
+    `<button class="output-tab" onclick="switchMultiTab(1,this)">📄 Regular PO: ${escHtml(regOrderObj.customerName)} (${regularPoNum})</button>` +
+    `<button class="output-tab" onclick="switchMultiTab(2,this)">📧 Vendor Email</button>`;
+
+  const panelsHtml =
+    `<div class="output-panel active" id="mpo-panel-0">
+      <div class="po-actions no-print">
+        <button class="btn-action primary" onclick="printMultiPO(0,'${splitPoNum}')">🖨 Save Split Load PO PDF</button>
+      </div>
+      <div class="po-paper" id="mpo-paper-0"></div>
+    </div>
+    <div class="output-panel" id="mpo-panel-1">
+      <div class="po-actions no-print">
+        <button class="btn-action primary" onclick="printMultiPO(1,'${regularPoNum}')">🖨 Save Regular PO PDF</button>
+      </div>
+      <div class="po-paper" id="mpo-paper-1"></div>
+    </div>`;
+
+  const vEmails     = parseVendorEmails(vendor.contact, vendor.email);
+  const combinedHtml = buildMultiPOVendorEmailHtml(orders, poNums, vendor);
+
+  const emailPanelHtml =
+    `<div class="output-panel" id="mpo-panel-2">
+      <div class="po-actions no-print">
+        <button class="btn-action" id="mpo-copyV" onclick="copyMultiPOEmail('mpo-copyV')">📋 Copy HTML Body</button>
+        <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Open Email (then paste body)</button>
+      </div>
+      <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Click <em>Open Email</em> to create a draft with both PO PDFs automatically attached.</div>
+      <div class="email-preview" id="mpo-emailDiv"></div>
+    </div>`;
+
+  multiDoc.innerHTML = `
+    <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
+      <div style="flex:1;">
+        <strong>📋 Split &amp; Regular Load — How to send:</strong><br>
+        <strong>1.</strong> Click <em>Save Split Load PO PDF</em> and <em>Save Regular PO PDF</em> on each tab, <em>or</em> click <em>⬇ Download All as ZIP</em> for both at once.<br>
+        <strong>2.</strong> Click <em>Vendor Email</em>, then <em>Open Email</em> — the draft auto-attaches both PDFs and fills the email body.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+        <button id="btn-download-all-pos" onclick="downloadAllMultiPOs()" style="background:#2d6a4f;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#3a8a65'" onmouseout="this.style.background='#2d6a4f'">⬇ Download All as ZIP</button>
+      </div>
+    </div>
+    <div class="output-tabs">${tabsHtml}</div>
+    ${panelsHtml}${emailPanelHtml}`;
+
+  document.getElementById('mpo-paper-0').innerHTML = buildPOHtml(splitOrderObj, splitPoNum);
+  document.getElementById('mpo-paper-1').innerHTML = buildPOHtml(regOrderObj, regularPoNum);
+
+  multiPOEmailData = {
+    to: vEmails.to,
+    cc: vEmails.cc || '',
+    subject: 'MPH United POs ' + splitPoNum + ', ' + regularPoNum + ' | Split & Regular Load',
+    bodyHtml: combinedHtml,
+    body: ''
+  };
+  renderEmailDiv('mpo-emailDiv', multiPOEmailData);
+
+  multiDoc.classList.add('active');
+  document.title = 'MPH POs ' + splitPoNum + ' (Split) + ' + regularPoNum + ' (Regular)';
+}
+
 async function generateMultiplePOs(fromCheckbox = false) {
   const selIdxs = importSelectedIdxs;
   if (selIdxs.length < 2) return;
@@ -2796,6 +3003,7 @@ async function printMultiPO(idx, poNum) {
   const origText = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving PDF…'; }
   showToast('Building PDF — please wait…', 8000);
+  const pdfClone2 = preparePdfClone(paper);
   try {
     await html2pdf()
       .set({
@@ -2805,12 +3013,14 @@ async function printMultiPO(idx, poNum) {
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       })
-      .from(paper)
+      .from(pdfClone2)
       .save();
     showToast('✅ PDF saved!', 3000);
   } catch(e) {
     console.error('printMultiPO error:', e);
     showToast('Error saving PDF. Try again.', 4000);
+  } finally {
+    cleanupPdfClone(pdfClone2);
   }
   if (btn) { btn.disabled = false; btn.textContent = origText; }
 }
@@ -2829,15 +3039,19 @@ async function downloadAllMultiPOs() {
       const poNum = lastMultiPOPoNums[i];
       if (btn) btn.textContent = '⏳ PDF ' + (i + 1) + ' of ' + count + '…';
       // Generate as blob (no download triggered yet)
-      const blob = await html2pdf()
-        .set({
-          margin: [0.45, 0.45, 0.45, 0.45],
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false },
-          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-        })
-        .from(paper)
-        .output('blob');
+      const zipClone = preparePdfClone(paper);
+      let blob;
+      try {
+        blob = await html2pdf()
+          .set({
+            margin: [0.45, 0.45, 0.45, 0.45],
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+          })
+          .from(zipClone)
+          .output('blob');
+      } finally { cleanupPdfClone(zipClone); }
       zip.file('MPH PO ' + poNum + '.pdf', blob);
     }
     if (btn) btn.textContent = '⏳ Packaging ZIP…';
@@ -2893,9 +3107,13 @@ async function openMultiPOEmail() {
             const paper = document.getElementById('mpo-paper-' + i);
             if (!paper) continue;
             try {
-              const pdfBlob = await html2pdf()
-                .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
-                .from(paper).output('blob');
+              const emailClone = preparePdfClone(paper);
+              let pdfBlob;
+              try {
+                pdfBlob = await html2pdf()
+                  .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
+                  .from(emailClone).output('blob');
+              } finally { cleanupPdfClone(emailClone); }
               const b64 = await blobToBase64(pdfBlob);
               await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (lastMultiPOPoNums[i]||i) + '.pdf', b64);
             } catch(pdfErr) { console.warn('PDF attach failed for PO ' + i + ':', pdfErr); }
