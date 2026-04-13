@@ -2030,7 +2030,11 @@ async function attachFileToDraft(token, messageId, filename, base64Content) {
 // off-screen at y=0, capture from the clone, then discard it.
 function preparePdfClone(paper) {
   const clone = paper.cloneNode(true);
-  clone.style.cssText = 'position:fixed;top:0;left:-9999px;margin:0;z-index:-1;width:' + paper.offsetWidth + 'px;background:white;';
+  // IMPORTANT: must use position:absolute, NOT fixed.
+  // html2canvas skips fixed-position elements entirely (renders blank).
+  // Absolute at top:0 places the clone at y=0 in the document so the
+  // captured canvas has no blank space above the content.
+  clone.style.cssText = 'position:absolute;top:0;left:0;width:' + (paper.offsetWidth || 760) + 'px;margin:0;pointer-events:none;background:white;';
   document.body.appendChild(clone);
   return clone;
 }
