@@ -348,6 +348,8 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
   .import-instructions { display: none; }
   /* Main screen instruction boxes — !important overrides the inline display:flex */
   .main-screen-instructions { display: none !important; }
+  /* Multi-PO instruction hint text — button is kept but description text is hidden */
+  .po-send-hint { display: none !important; }
   .import-topbar { padding: 0 14px; height: 52px; }
   .import-title { font-size: 12px; letter-spacing: 0.5px; }
   .import-subtitle { display: none; }
@@ -705,6 +707,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       <div class="output-panel active" id="outPanel0">
         <div class="po-actions">
           <button class="btn-action primary" onclick="printPO()">🖨 Save PO PDF</button>
+          <button class="btn-action primary" onclick="openInOutlook(0)">✉ Send POs to Outlook in Browser</button>
           <button class="btn-action" onclick="generatePO()">↺ Regenerate</button>
         </div>
         <div class="po-paper" id="poPaper"></div>
@@ -2899,15 +2902,13 @@ async function loadSplitAndRegular() {
     </div>`;
 
   multiDoc.innerHTML = `
-    <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
-      <div style="flex:1;">
-        <strong>📋 Split &amp; Regular Load — How to send:</strong><br>
-        Both PO PDFs are attached automatically when you click <em>Send POs to Outlook in Browser</em>.<br>
-        Or save each PDF individually by clicking <em>Save PO PDF</em> on each tab.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
-        <button onclick="openMultiPOEmail()" style="background:#1a5c2e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#237a3e'" onmouseout="this.style.background='#1a5c2e'">✉ Send POs to Outlook in Browser</button>
-      </div>
+    <div class="po-actions no-print">
+      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
+    </div>
+    <div class="no-print po-send-hint" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;">
+      <strong>📋 Split &amp; Regular Load — How to send:</strong><br>
+      Both PO PDFs are attached automatically when you click <em>Send POs to Outlook in Browser</em>.<br>
+      Or save each PDF individually by clicking <em>Save PO PDF</em> on each tab.
     </div>
     <div class="output-tabs">${tabsHtml}</div>
     ${panelsHtml}${emailPanelHtml}`;
@@ -3015,16 +3016,14 @@ async function generateMultiplePOs(fromCheckbox = false) {
   </div>`;
 
   multiDoc.innerHTML = `
-    <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
-      <div style="flex:1;">
-        <strong>📋 Multiple POs — How to send:</strong><br>
-        All PO PDFs are attached automatically when you click <em>Send POs to Outlook in Browser</em>.<br>
-        Or save each PDF individually by clicking <em>Save PO PDF</em> on each PO tab.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
-        <button onclick="openMultiPOEmail()" style="background:#1a5c2e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#237a3e'" onmouseout="this.style.background='#1a5c2e'">✉ Send POs to Outlook in Browser</button>
-        <button onclick="generateMultiplePOs(true)" style="background:#1a3a6e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#254d91'" onmouseout="this.style.background='#1a3a6e'">↻ Regenerate POs</button>
-      </div>
+    <div class="po-actions no-print">
+      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
+      <button class="btn-action" onclick="generateMultiplePOs(true)">↻ Regenerate POs</button>
+    </div>
+    <div class="no-print po-send-hint" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;">
+      <strong>📋 Multiple POs — How to send:</strong><br>
+      All PO PDFs are attached automatically when you click <em>Send POs to Outlook in Browser</em>.<br>
+      Or save each PDF individually by clicking <em>Save PO PDF</em> on each PO tab.
     </div>
     <div class="output-tabs">${tabsHtml}</div>
     ${panelsHtml}`;
