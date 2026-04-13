@@ -1111,24 +1111,21 @@ async function printPO() {
   const origText = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving PDF…'; }
   showToast('Building PDF — please wait…', 8000);
-  const pdfClone = preparePdfClone(paper);
   try {
     await html2pdf()
       .set({
         margin: [0.45, 0.45, 0.45, 0.45],
         filename: 'MPH PO ' + (mphPONum || 'Document') + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        html2canvas: pdfCanvasOpts(),
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       })
-      .from(pdfClone)
+      .from(paper)
       .save();
     showToast('✅ PDF saved!', 3000);
   } catch(e) {
     console.error('printPO error:', e);
     showToast('Error saving PDF. Try again.', 4000);
-  } finally {
-    cleanupPdfClone(pdfClone);
   }
   if (btn) { btn.disabled = false; btn.textContent = origText; }
 }
@@ -1577,13 +1574,9 @@ async function openInOutlook(idx) {
         if (paper) {
           try {
             showToast('⏳ Generating PDF attachment…', 8000);
-            const pdfClone1 = preparePdfClone(paper);
-            let pdfBlob;
-            try {
-              pdfBlob = await html2pdf()
-                .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
-                .from(pdfClone1).output('blob');
-            } finally { cleanupPdfClone(pdfClone1); }
+            const pdfBlob = await html2pdf()
+              .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:pdfCanvasOpts(), jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
+              .from(paper).output('blob');
             const b64 = await blobToBase64(pdfBlob);
             await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (mphPONum||'') + '.pdf', b64);
           } catch(pdfErr) { console.warn('PDF attach failed:', pdfErr); }
@@ -2023,23 +2016,20 @@ async function attachFileToDraft(token, messageId, filename, base64Content) {
   if (!r.ok) throw new Error('Attach ' + r.status);
 }
 
-// ── PDF clone helpers ────────────────────────────────────────────────────────
-// html2canvas captures an element at its absolute document position, which
-// means a poPaper div that is deep in the DOM produces a PDF with a large
-// blank area above the content.  The fix: clone the element, park the clone
-// off-screen at y=0, capture from the clone, then discard it.
-function preparePdfClone(paper) {
-  const clone = paper.cloneNode(true);
-  // IMPORTANT: must use position:absolute, NOT fixed.
-  // html2canvas skips fixed-position elements entirely (renders blank).
-  // Absolute at top:0 places the clone at y=0 in the document so the
-  // captured canvas has no blank space above the content.
-  clone.style.cssText = 'position:absolute;top:0;left:0;width:' + (paper.offsetWidth || 760) + 'px;margin:0;pointer-events:none;background:white;';
-  document.body.appendChild(clone);
-  return clone;
-}
-function cleanupPdfClone(clone) {
-  if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+// ── PDF canvas options ───────────────────────────────────────────────────────
+// html2canvas needs to know the current scroll offset so it correctly positions
+// the element in the canvas.  Without scrollY adjustment it captures from the
+// document's y=0, producing a mostly-blank canvas when the element is far down
+// the page.  scrollX/scrollY = -window.scroll* tells html2canvas to offset the
+// render window to the element's actual position.
+function pdfCanvasOpts() {
+  return {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    scrollX: -window.scrollX,
+    scrollY: -window.scrollY
+  };
 }
 
 // Converts a Blob to a base64 string (no data-URL prefix).
@@ -3007,24 +2997,21 @@ async function printMultiPO(idx, poNum) {
   const origText = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Saving PDF…'; }
   showToast('Building PDF — please wait…', 8000);
-  const pdfClone2 = preparePdfClone(paper);
   try {
     await html2pdf()
       .set({
         margin: [0.45, 0.45, 0.45, 0.45],
         filename: 'MPH PO ' + (poNum || ('Document-' + idx)) + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false },
+        html2canvas: pdfCanvasOpts(),
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       })
-      .from(pdfClone2)
+      .from(paper)
       .save();
     showToast('✅ PDF saved!', 3000);
   } catch(e) {
     console.error('printMultiPO error:', e);
     showToast('Error saving PDF. Try again.', 4000);
-  } finally {
-    cleanupPdfClone(pdfClone2);
   }
   if (btn) { btn.disabled = false; btn.textContent = origText; }
 }
@@ -3043,19 +3030,15 @@ async function downloadAllMultiPOs() {
       const poNum = lastMultiPOPoNums[i];
       if (btn) btn.textContent = '⏳ PDF ' + (i + 1) + ' of ' + count + '…';
       // Generate as blob (no download triggered yet)
-      const zipClone = preparePdfClone(paper);
-      let blob;
-      try {
-        blob = await html2pdf()
-          .set({
-            margin: [0.45, 0.45, 0.45, 0.45],
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-          })
-          .from(zipClone)
-          .output('blob');
-      } finally { cleanupPdfClone(zipClone); }
+      const blob = await html2pdf()
+        .set({
+          margin: [0.45, 0.45, 0.45, 0.45],
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: pdfCanvasOpts(),
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        })
+        .from(paper)
+        .output('blob');
       zip.file('MPH PO ' + poNum + '.pdf', blob);
     }
     if (btn) btn.textContent = '⏳ Packaging ZIP…';
@@ -3111,13 +3094,9 @@ async function openMultiPOEmail() {
             const paper = document.getElementById('mpo-paper-' + i);
             if (!paper) continue;
             try {
-              const emailClone = preparePdfClone(paper);
-              let pdfBlob;
-              try {
-                pdfBlob = await html2pdf()
-                  .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
-                  .from(emailClone).output('blob');
-              } finally { cleanupPdfClone(emailClone); }
+              const pdfBlob = await html2pdf()
+                .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:pdfCanvasOpts(), jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
+                .from(paper).output('blob');
               const b64 = await blobToBase64(pdfBlob);
               await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (lastMultiPOPoNums[i]||i) + '.pdf', b64);
             } catch(pdfErr) { console.warn('PDF attach failed for PO ' + i + ':', pdfErr); }
