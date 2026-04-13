@@ -384,6 +384,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
   <div class="topbar-right">
     <div class="topbar-stat">Customers: <span>183</span></div>
     <div class="topbar-stat">Vendors: <span>20</span></div>
+    <button onclick="openSignatureModal()" title="Set Email Signature" style="background:transparent;border:1px solid rgba(242,237,230,0.25);border-radius:6px;color:rgba(242,237,230,0.7);padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Aptos','Inter',sans-serif;letter-spacing:0.5px;transition:all 0.2s;" onmouseover="this.style.background='rgba(242,237,230,0.1)'" onmouseout="this.style.background='transparent'">✍ Signature</button>
     <div class="topbar-module">PO System v3</div>
   </div>
 </div>
@@ -705,7 +706,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       </div>
       <div class="output-panel" id="outPanel1">
         <div class="po-actions"><button class="btn-action" id="copyV" onclick="copyEmail(0,'copyV')">📋 Copy HTML Body</button><button class="btn-action primary" onclick="openInOutlook(0)">✉ Open Email (then paste body)</button></div>
-        <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 To attach the PO, save the PDF first, then attach it manually to the email.</div>
+        <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Click <em>Open Email</em> to create a draft with the PO PDF automatically attached.</div>
         <div class="email-preview" id="emailDiv0"></div>
       </div>
       <div class="output-panel" id="outPanel2">
@@ -1260,21 +1261,21 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     var linePoNum = (lineOverrides && lineOverrides[li]) ? lineOverrides[li].poNum : (poNum || '');
     var lineCustPO = (lineOverrides && lineOverrides[li]) ? lineOverrides[li].custPO : (o.customerPO || '');
     var r = '<tr>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(linePoNum) + '</td>';
-    if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(lineCustPO) + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(linePoNum) + '</td>';
+    if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(lineCustPO) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;">' + dh;
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
     r += '</tr>';
     return r;
   }).join('');
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,Arial,Helvetica,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   var vGreeting = getVendorGreeting(v);
-  h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (vGreeting ? ' ' + vGreeting + ',' : ',') + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12pt;">Hello' + (vGreeting ? ' ' + vGreeting + ',' : ',') + '</p><br>';
   var isCPU = (o.customerName||'').toUpperCase() === 'CPU';
   var introLine = 'Please find orders below for <strong>' + escHtml(v.name||'') + '</strong>';
   var vendorCS = parseCityState(v.address||'');
@@ -1285,7 +1286,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     if (customerCS) introLine += ' - ' + escHtml(customerCS);
   }
   introLine += '.';
-  h += '<p style="line-height:1.6;margin:0;font-size:12px;">' + introLine + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12pt;">' + introLine + '</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
   h += '<table width="700" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
   h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
@@ -1297,24 +1298,24 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Unit Price</th>';
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + rows + '</tbody></table>';
-  if (o.salesOrder) h += '<p style="margin:6px 0 0;font-size:12px;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(o.salesOrder) + '</p>';
+  if (o.salesOrder) h += '<p style="margin:6px 0 0;font-size:12pt;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(o.salesOrder) + '</p>';
   h += '<br>';
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12pt;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
   h += '</table>';
   h += '<br>';
   if (!o.isBlind) {
     if (o.isCoastal) {
-      h += '<p style="line-height:1.6;margin:0;font-size:12px;"><strong>Ship From:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
+      h += '<p style="line-height:1.6;margin:0;font-size:12pt;"><strong>Ship From:</strong><br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
     } else {
-      h += '<p style="line-height:1.6;margin:0;font-size:12px;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
+      h += '<p style="line-height:1.6;margin:0;font-size:12pt;"><strong>Ship To:</strong><br>' + escHtml(o.customerName) + '<br>' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</p><br>';
     }
   }
-  if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:12px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div><br>';
-  h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">' + (o.isCoastal ? 'Please confirm receipt of this PO. ' : 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. ') + 'Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:12pt;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div><br>';
+  h += '<br><p style="line-height:1.6;margin:0;font-size:12pt;">' + (o.isCoastal ? 'Please confirm receipt of this PO. ' : 'Please confirm receipt of this PO and provide expected ship date at your earliest convenience. ') + 'Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   if (o.isCoastal) {
-    h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">BOL is attached to this email.</p>';
-    h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">The carrier will contact you to arrange freight.</p>';
+    h += '<br><p style="line-height:1.6;margin:0;font-size:12pt;">BOL is attached to this email.</p>';
+    h += '<br><p style="line-height:1.6;margin:0;font-size:12pt;">The carrier will contact you to arrange freight.</p>';
   }
   h += '</td></tr></table>';
   return h;
@@ -1330,15 +1331,15 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
       var qty = parseFloat(l.qty) || 0;
       var total = qty * (parseFloat(l.price) || 0);
       var r = '<tr>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
-      if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
+      if (!o.isBlind) r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(o.customerPO||'') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;">' + dh;
       if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
       r += '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
       r += '</tr>';
       allRows += r;
     });
@@ -1346,7 +1347,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   var poList = poNums.join(', ');
   var h = '<table width="700" cellpadding="0" cellspacing="0" border="0" style="font-family:\'Aptos\',Calibri,Arial,Helvetica,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;"><tr><td style="padding:0;">';
   var mpoGreeting = getVendorGreeting(vendor);
-  h += '<p style="line-height:1.6;margin:0;font-size:12px;">Hello' + (mpoGreeting ? ' ' + mpoGreeting + ',' : ',') + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12pt;">Hello' + (mpoGreeting ? ' ' + mpoGreeting + ',' : ',') + '</p><br>';
   var customerEntries = [];
   var seenCustomers = {};
   orders.forEach(function(o) {
@@ -1365,7 +1366,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
     }).join(', ') + '</strong>';
   }
   multiIntro += '.';
-  h += '<p style="line-height:1.6;margin:0;font-size:12px;">' + multiIntro + '</p><br>';
+  h += '<p style="line-height:1.6;margin:0;font-size:12pt;">' + multiIntro + '</p><br>';
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
   h += '<table width="700" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
   h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
@@ -1379,9 +1380,9 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + allRows + '</tbody></table>';
   var multiSOs = orders.map(function(o){ return o.salesOrder||''; }).filter(function(v){ return v; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
-  if (multiSOs.length > 0) h += '<p style="margin:6px 0 0;font-size:12px;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(multiSOs.join(', ')) + '</p>';
+  if (multiSOs.length > 0) h += '<p style="margin:6px 0 0;font-size:12pt;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(multiSOs.join(', ')) + '</p>';
   h += '<br>';
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12px;">';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12pt;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(vendor.shipVia||orders[0].shipVia||'') + '</td></tr>';
   h += '</table>';
   // Ship To block — one entry per unique destination, matching single-PO vendor email behaviour
@@ -1400,9 +1401,9 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
     h += '<br>';
     shipToEntries.forEach(function(entry) {
       if (entry.isCoastal) {
-        h += '<p style="line-height:1.6;margin:0 0 12px;font-size:12px;"><strong>Ship From:</strong><br>' + escHtml(entry.shipTo).replace(/\n/g,'<br>') + '</p>';
+        h += '<p style="line-height:1.6;margin:0 0 12px;font-size:12pt;"><strong>Ship From:</strong><br>' + escHtml(entry.shipTo).replace(/\n/g,'<br>') + '</p>';
       } else {
-        h += '<p style="line-height:1.6;margin:0 0 12px;font-size:12px;"><strong>Ship To:</strong><br>' + escHtml(entry.customerName) + '<br>' + escHtml(entry.shipTo).replace(/\n/g,'<br>') + '</p>';
+        h += '<p style="line-height:1.6;margin:0 0 12px;font-size:12pt;"><strong>Ship To:</strong><br>' + escHtml(entry.customerName) + '<br>' + escHtml(entry.shipTo).replace(/\n/g,'<br>') + '</p>';
       }
     });
   }
@@ -1413,16 +1414,16 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
       .filter(function(v, i, a) { return a.indexOf(v) === i; });
     if (uniqueEmailNotes.length === 1) {
       // All orders share the same note — show it once without PO labels
-      h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:12px;"><strong>PO Notes:</strong><br>' + escHtml(uniqueEmailNotes[0]).replace(/\n/g,'<br>') + '</div>';
+      h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:0;font-size:12pt;"><strong>PO Notes:</strong><br>' + escHtml(uniqueEmailNotes[0]).replace(/\n/g,'<br>') + '</div>';
     } else {
       notesOrders.forEach(function(o, i) {
         var poNum = poNums[orders.indexOf(o)];
         var label = notesOrders.length > 1 ? 'PO Notes (' + escHtml(poNum||'') + ')' : 'PO Notes';
-        h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:' + (i < notesOrders.length - 1 ? '8' : '0') + 'px;font-size:12px;"><strong>' + label + ':</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
+        h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:' + (i < notesOrders.length - 1 ? '8' : '0') + 'px;font-size:12pt;"><strong>' + label + ':</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
       });
     }
   }
-  h += '<br><p style="line-height:1.6;margin:0;font-size:12px;">Please confirm receipt of these POs and provide expected ship dates at your earliest convenience. Please reference the applicable PO # on all correspondence and shipping documents.</p>';
+  h += '<br><p style="line-height:1.6;margin:0;font-size:12pt;">Please confirm receipt of these POs and provide expected ship dates at your earliest convenience. Please reference the applicable PO # on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
   return h;
 }
@@ -1560,14 +1561,26 @@ async function openInOutlook(idx) {
   const ccAddr = ccMatches.join(';');
   const htmlSrc = e.bodyHtml || e.body || '';
 
-  // ── Try Graph API draft (auto-populates full HTML body) ──────────────────
+  // ── Try Graph API draft (auto-populates full HTML body + attaches PDF) ───
   try {
     const mailToken = await getMailToken();
     if (mailToken) {
       const draft = await createMailDraft(mailToken, toAddr, ccAddr, e.subject, htmlSrc);
-      if (draft && draft.webLink) {
+      if (draft && draft.id && draft.webLink) {
+        // Generate the PO PDF as a blob and attach it to the draft
+        const paper = document.getElementById('poPaper');
+        if (paper) {
+          try {
+            showToast('⏳ Generating PDF attachment…', 8000);
+            const pdfBlob = await html2pdf()
+              .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
+              .from(paper).output('blob');
+            const b64 = await blobToBase64(pdfBlob);
+            await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (mphPONum||'') + '.pdf', b64);
+          } catch(pdfErr) { console.warn('PDF attach failed:', pdfErr); }
+        }
         window.open(draft.webLink, '_blank');
-        showToast('✉ Email draft opened in Outlook — attach your saved PO PDF, then send', 6000);
+        showToast('✉ Draft opened — PO PDF attached. Review and send!', 6000);
         return;
       }
     }
@@ -1583,6 +1596,42 @@ async function openInOutlook(idx) {
   if (ccAddr) owaUrl += '&cc=' + encodeURIComponent(ccAddr);
   window.open(owaUrl, '_blank');
   showToast('✉ HTML body copied to clipboard — click in the email body and paste with Cmd+V', 6000);
+}
+
+// ── EMAIL SIGNATURE ───────────────────────────────────────────────────────
+function openSignatureModal() {
+  const saved = localStorage.getItem('mph_po_email_signature') || '';
+  document.getElementById('signatureInput').value = saved;
+  document.getElementById('signaturePreview').style.display = 'none';
+  const overlay = document.getElementById('signatureModal');
+  overlay.style.display = 'flex';
+}
+function closeSignatureModal() {
+  document.getElementById('signatureModal').style.display = 'none';
+}
+function saveSignature() {
+  const sig = document.getElementById('signatureInput').value.trim();
+  if (sig) {
+    localStorage.setItem('mph_po_email_signature', sig);
+    showToast('✅ Signature saved — will be appended to all email drafts', 3500);
+  } else {
+    localStorage.removeItem('mph_po_email_signature');
+    showToast('Signature cleared', 2500);
+  }
+  closeSignatureModal();
+}
+function clearSignature() {
+  document.getElementById('signatureInput').value = '';
+  document.getElementById('signaturePreview').style.display = 'none';
+}
+function previewSignature() {
+  const sig = document.getElementById('signatureInput').value.trim();
+  const preview = document.getElementById('signaturePreview');
+  if (sig) { preview.innerHTML = sig; preview.style.display = 'block'; }
+  else { preview.style.display = 'none'; }
+}
+function getSignatureHtml() {
+  return localStorage.getItem('mph_po_email_signature') || '';
 }
 
 function showToast(msg, duration) {
@@ -1819,9 +1868,12 @@ async function graphPatch(path, body, etag) {
 async function createMailDraft(token, toAddr, ccAddr, subject, htmlBody) {
   const parseAddrs = str => (str || '').split(';').map(a => a.trim()).filter(Boolean)
                               .map(a => ({ emailAddress: { address: a } }));
+  // Append stored signature (separated by a horizontal rule)
+  const sig = getSignatureHtml();
+  const fullBody = sig ? htmlBody + '<br><hr style="border:none;border-top:1px solid #e0dbd2;margin:16px 0;">' + sig : htmlBody;
   const payload = {
     subject,
-    body: { contentType: "HTML", content: htmlBody },
+    body: { contentType: "HTML", content: fullBody },
     toRecipients: parseAddrs(toAddr)
   };
   const cc = parseAddrs(ccAddr);
@@ -1834,6 +1886,31 @@ async function createMailDraft(token, toAddr, ccAddr, subject, htmlBody) {
   });
   if (!r.ok) throw new Error("Graph " + r.status);
   return r.json();
+}
+
+// Attaches a file (base64) to an existing draft message via Graph API.
+async function attachFileToDraft(token, messageId, filename, base64Content) {
+  const r = await fetch('https://graph.microsoft.com/v1.0/me/messages/' + messageId + '/attachments', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      '@odata.type': '#microsoft.graph.fileAttachment',
+      name: filename,
+      contentType: 'application/pdf',
+      contentBytes: base64Content
+    })
+  });
+  if (!r.ok) throw new Error('Attach ' + r.status);
+}
+
+// Converts a Blob to a base64 string (no data-URL prefix).
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 // ── LOAD ORDERS ───────────────────────────────────────────────────────────
@@ -2563,7 +2640,7 @@ async function generateMultiplePOs(fromCheckbox = false) {
       <button class="btn-action" id="mpo-copyV" onclick="copyMultiPOEmail('mpo-copyV')">📋 Copy HTML Body</button>
       <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Open Email (then paste body)</button>
     </div>
-    <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 To attach the POs, save each PDF first, then attach them manually to the email.</div>
+    <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Click <em>Open Email</em> to create a draft with all PO PDFs automatically attached.</div>
     <div class="email-preview" id="mpo-emailDiv"></div>
   </div>`;
 
@@ -2691,14 +2768,30 @@ async function openMultiPOEmail() {
   const ccAddr = ccMatches.join(';');
   const htmlSrc = multiPOEmailData.bodyHtml || '';
 
-  // ── Try Graph API draft (auto-populates full HTML body) ──────────────────
+  // ── Try Graph API draft (auto-populates full HTML body + attaches all PDFs) ──
   try {
     const mailToken = await getMailToken();
     if (mailToken) {
       const draft = await createMailDraft(mailToken, toAddr, ccAddr, multiPOEmailData.subject||'', htmlSrc);
-      if (draft && draft.webLink) {
+      if (draft && draft.id && draft.webLink) {
+        // Attach each generated PO PDF
+        const count = lastMultiPOPoNums.length;
+        if (count > 0) {
+          showToast('⏳ Generating ' + count + ' PDF attachment' + (count>1?'s':'') + '…', 12000);
+          for (let i = 0; i < count; i++) {
+            const paper = document.getElementById('mpo-paper-' + i);
+            if (!paper) continue;
+            try {
+              const pdfBlob = await html2pdf()
+                .set({ margin:[0.45,0.45,0.45,0.45], image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2,useCORS:true,logging:false}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} })
+                .from(paper).output('blob');
+              const b64 = await blobToBase64(pdfBlob);
+              await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (lastMultiPOPoNums[i]||i) + '.pdf', b64);
+            } catch(pdfErr) { console.warn('PDF attach failed for PO ' + i + ':', pdfErr); }
+          }
+        }
         window.open(draft.webLink, '_blank');
-        showToast('✉ Email draft opened in Outlook — attach your saved PO PDFs, then send', 6000);
+        showToast('✉ Draft opened — ' + (count>0 ? count + ' PO PDF' + (count>1?'s':'')+' attached. ' : '') + 'Review and send!', 6000);
         return;
       }
     }
@@ -2850,18 +2943,18 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
       var qty = parseFloat(l.qty) || 0;
       var total = qty * (parseFloat(l.price) || 0);
       var r = '<tr>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;vertical-align:top;">' + dh;
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;">' + dh;
       if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
       r += '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12px;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
       r += '</tr>';
       return r;
     }).join('');
 
     h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Order ' + (idx+1) + ' — ' + escHtml(o.customerName) + '</p>';
-    h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:10px;font-size:12px;">';
+    h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:10px;font-size:12pt;">';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Customer PO</td><td style="padding:3px 0;">' + escHtml(o.customerPO) + '</td></tr>';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Date</td><td style="padding:3px 0;">' + escHtml(o.shipDate) + '</td></tr>';
     h += '<tr><td style="padding:3px 20px 3px 0;font-weight:700;color:#555;white-space:nowrap;">Ship To</td><td style="padding:3px 0;">' + escHtml(o.shipTo).replace(/\n/g,'<br>') + '</td></tr>';
@@ -2873,14 +2966,14 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
     h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Buy Price</th>';
     h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
     h += '</tr></thead><tbody>' + rows + '</tbody></table>';
-    if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:20px;font-size:12px;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
+    if (o.specialInstructions) h += '<div style="background:#fffbf0;border-left:3px solid #b8860b;padding:10px 14px;margin-bottom:20px;font-size:12pt;"><strong>PO Notes:</strong><br>' + escHtml(o.specialInstructions).replace(/\n/g,'<br>') + '</div>';
   });
 
-  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:12px;">';
+  h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;font-size:12pt;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">MPH PO #</td><td style="padding:4px 0;">' + poNum + '</td></tr>';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">CPU — Wash &amp; Return</td></tr>';
   h += '</table>';
-  h += '<p style="line-height:1.6;margin:20px 0 0;font-size:12px;">Please confirm receipt of this PO and provide expected ship dates at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
+  h += '<p style="line-height:1.6;margin:20px 0 0;font-size:12pt;">Please confirm receipt of this PO and provide expected ship dates at your earliest convenience. Please reference PO # <strong>' + poNum + '</strong> on all correspondence and shipping documents.</p>';
   h += '</td></tr></table>';
   return h;
 }
@@ -3022,6 +3115,27 @@ setTimeout(initMsal, 300);
       <span class="mobile-tab-icon">📄</span>
       <span>Preview</span>
     </button>
+  </div>
+</div>
+
+<!-- ═══ SIGNATURE MODAL ═══ -->
+<div class="modal-overlay" id="signatureModal" style="display:none;position:fixed;inset:0;background:rgba(26,22,18,0.55);z-index:600;display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:560px;width:95vw;">
+    <div class="modal-title">✍ Email Signature <button class="modal-close" onclick="closeSignatureModal()">&#10005;</button></div>
+    <div class="modal-note">Paste your Outlook signature below. It will be automatically appended to every email draft. Saved locally in your browser.</div>
+    <div class="field">
+      <label>Signature HTML <span style="font-weight:400;font-size:11px;color:var(--ink2);">— paste from Outlook (right-click → View Source on your signature)</span></label>
+      <textarea id="signatureInput" rows="8" placeholder="Paste your signature HTML here, e.g.&#10;&lt;p&gt;Best regards,&lt;/p&gt;&#10;&lt;p&gt;&lt;strong&gt;Jack Smith&lt;/strong&gt;&lt;br&gt;MPH United&lt;/p&gt;" style="width:100%;font-family:'Courier New',monospace;font-size:11px;padding:8px;border:1px solid var(--border);border-radius:6px;resize:vertical;min-height:140px;outline:none;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    </div>
+    <div id="signaturePreview" style="display:none;border:1px solid var(--border);border-radius:6px;padding:12px 16px;background:#fafaf8;margin-top:4px;font-size:13px;"></div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button onclick="previewSignature()" style="flex:1;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:8px;font-family:'Aptos','Inter',sans-serif;font-size:12px;cursor:pointer;">👁 Preview</button>
+      <button onclick="clearSignature()" style="background:transparent;border:1px solid rgba(200,60,60,0.4);color:#c03c3c;border-radius:6px;padding:8px 14px;font-family:'Aptos','Inter',sans-serif;font-size:12px;cursor:pointer;">Clear</button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeSignatureModal()">Cancel</button>
+      <button class="btn-modal-save" onclick="saveSignature()">Save Signature</button>
+    </div>
   </div>
 </div>
 
