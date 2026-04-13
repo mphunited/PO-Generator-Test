@@ -1742,7 +1742,7 @@ const MSAL_CONFIG = {
   auth: {
     clientId: "b907c7ac-306b-4b00-b9a6-c639d581d98f",
     authority: "https://login.microsoftonline.com/3abf2937-e518-43e5-b2a4-456eecfa8b00",
-    redirectUri: "https://mphunited.github.io/PO-Generator-Test/PO.html", // TEMP — revert to /Generate/PO.html before production push
+    redirectUri: "https://mphunited.github.io/Generate/PO.html",
   },
   cache: { cacheLocation: "sessionStorage" }
 };
@@ -1873,8 +1873,15 @@ async function initMsal() {
     msalInstance = new msal.PublicClientApplication(MSAL_CONFIG);
     await msalInstance.initialize();
     console.log("MSAL initialized OK");
-    try { await msalInstance.handleRedirectPromise(); } catch(e) { console.warn("redirect:", e); }
-    applyUserSignature(); // auto-load signature if user is already signed in
+    try {
+      const redirectResult = await msalInstance.handleRedirectPromise();
+      if (redirectResult) {
+        // Page loaded as the result of a mobile loginRedirect completing — finish login
+        applyUserSignature();
+        refreshImport();
+      }
+    } catch(e) { console.warn("redirect:", e); }
+    applyUserSignature(); // also runs for already-signed-in users on normal page load
   } catch(e) {
     console.error("MSAL init error:", e);
   }
@@ -1890,8 +1897,10 @@ async function getToken() {
   } catch(e) { return null; }
 }
 
-// Acquires a Mail.ReadWrite token — tries silent first, then popup on first consent.
-// Returns null if the user declines or a popup blocker prevents it (caller falls back to OWA compose).
+// Acquires a Mail.ReadWrite token.
+// Desktop: tries silent first, then a one-time consent popup on first use.
+// Mobile: silent only — popup avoided entirely to prevent nested-popup errors.
+// If all else fails, caller falls back to OWA compose + clipboard.
 async function getMailToken() {
   if (!msalInstance) return null;
   const accounts = msalInstance.getAllAccounts();
@@ -1900,7 +1909,7 @@ async function getMailToken() {
     const r = await msalInstance.acquireTokenSilent({ scopes: MAIL_SCOPES, account: accounts[0] });
     return r.accessToken;
   } catch(e) {
-    // Silent failed — user hasn't consented yet. Try popup (allowed because we're in a click-event chain).
+    if (isMobileDevice()) return null; // no popup on mobile
     try {
       const r = await msalInstance.acquireTokenPopup({ scopes: MAIL_SCOPES });
       return r.accessToken;
@@ -1925,6 +1934,12 @@ async function signIn() {
     return;
   }
   try {
+    if (isMobileDevice()) {
+      // Mobile browsers block popups — use redirect instead.
+      // handleRedirectPromise() in initMsal() will complete login on return.
+      await msalInstance.loginRedirect({ scopes: GRAPH_SCOPES });
+      return; // page will navigate away; code below won't run
+    }
     await msalInstance.loginPopup({ scopes: GRAPH_SCOPES });
     applyUserSignature();
     refreshImport();
