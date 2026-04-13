@@ -1579,8 +1579,15 @@ async function openInOutlook(idx) {
             await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (mphPONum||'') + '.pdf', b64);
           } catch(pdfErr) { console.warn('PDF attach failed:', pdfErr); }
         }
-        window.open(draft.webLink, '_blank');
-        showToast('✉ Draft opened — PO PDF attached. Review and send!', 6000);
+        // On mobile, webLink triggers a native-app handoff that blanks the screen.
+        // Open the Drafts folder instead — the new draft is always at the top.
+        const openUrl = isMobileDevice()
+          ? 'https://outlook.office.com/mail/drafts'
+          : draft.webLink;
+        window.open(openUrl, '_blank');
+        showToast(isMobileDevice()
+          ? '✉ Draft created with PDF attached — tap your draft at the top of Drafts to review and send'
+          : '✉ Draft opened — PO PDF attached. Review and send!', 7000);
         return;
       }
     }
@@ -1596,6 +1603,13 @@ async function openInOutlook(idx) {
   if (ccAddr) owaUrl += '&cc=' + encodeURIComponent(ccAddr);
   window.open(owaUrl, '_blank');
   showToast('✉ HTML body copied to clipboard — click in the email body and paste with Cmd+V', 6000);
+}
+
+// Returns true when running on a phone/tablet browser.
+// On mobile, OWA's webLink triggers a native-app handoff that fails for API drafts,
+// so we redirect to the Drafts folder instead (draft lands at the top).
+function isMobileDevice() {
+  return /iPhone|iPad|iPod|Android|Mobile|Tablet/i.test(navigator.userAgent);
 }
 
 // ── EMAIL SIGNATURE ───────────────────────────────────────────────────────
@@ -2872,8 +2886,16 @@ async function openMultiPOEmail() {
             } catch(pdfErr) { console.warn('PDF attach failed for PO ' + i + ':', pdfErr); }
           }
         }
-        window.open(draft.webLink, '_blank');
-        showToast('✉ Draft opened — ' + (count>0 ? count + ' PO PDF' + (count>1?'s':'')+' attached. ' : '') + 'Review and send!', 6000);
+        // On mobile, webLink triggers a native-app handoff that blanks the screen.
+        // Open the Drafts folder instead — the new draft is always at the top.
+        const openUrl = isMobileDevice()
+          ? 'https://outlook.office.com/mail/drafts'
+          : draft.webLink;
+        window.open(openUrl, '_blank');
+        const attachMsg = count > 0 ? count + ' PO PDF' + (count > 1 ? 's' : '') + ' attached. ' : '';
+        showToast(isMobileDevice()
+          ? '✉ Draft created — ' + attachMsg + 'Tap your draft at the top of Drafts to review and send'
+          : '✉ Draft opened — ' + attachMsg + 'Review and send!', 7000);
         return;
       }
     }
