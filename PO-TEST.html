@@ -2430,6 +2430,7 @@ function renderImportTable() {
     const d = o.desc||"—";
     return "<tr onclick=\"selectImportRow("+i+")\" id=\"irow-"+i+"\">" +
       "<td class=\"td-status\"><span class=\"status-pill "+statusPillClass(o.status)+"\">"+st+"</span></td>" +
+      "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.vendor||o.sheet||"").split(" - ")[0]+"</td>" +
       "<td class=\"td-cust\">"+(o.customer||"—")+"</td>" +
       "<td style=\"white-space:nowrap;color:var(--gold);font-weight:600\">"+(o.mph_po||"—")+"</td>" +
       "<td style=\"white-space:nowrap\">"+(o.cust_po||"—")+"</td>" +
@@ -2438,13 +2439,12 @@ function renderImportTable() {
       "<td style=\"text-align:right;white-space:nowrap\">"+(o.buy||"—")+"</td>" +
       "<td style=\"text-align:right;white-space:nowrap\">"+(o.sell||"—")+"</td>" +
       "<td style=\"white-space:nowrap\">"+fmtDate(o.ship_date)+"</td>" +
-      "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.vendor||o.sheet||"").split(" - ")[0]+"</td>" +
       "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.freight||"—")+"</td>" +
       "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.csr||"—")+"</td></tr>";
   }).join("");
   wrap.innerHTML = "<table class=\"import-table\"><thead><tr>" +
-    "<th>Status</th><th>Customer</th><th>MPH PO</th><th>Cust PO</th><th>Description</th>" +
-    "<th>Qty</th><th>Buy</th><th>Sell</th><th>Ship Date</th><th>Vendor</th><th>Freight</th><th>CSR</th>" +
+    "<th>Status</th><th>Vendor</th><th>Customer</th><th>MPH PO</th><th>Cust PO</th><th>Description</th>" +
+    "<th>Qty</th><th>Buy</th><th>Sell</th><th>Ship Date</th><th>Freight</th><th>CSR</th>" +
     "</tr></thead><tbody>"+rows+"</tbody></table>";
 }
 
