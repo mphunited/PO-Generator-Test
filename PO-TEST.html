@@ -406,10 +406,10 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <strong>1)</strong> For single orders, click the order and then click <em>Load into PO Builder</em>.&nbsp;&nbsp;
     <strong>2)</strong> For split orders, click all the orders and then click <em>Load as Split Load</em>.&nbsp;&nbsp;
     <strong>3)</strong> For split loads that need multiple PO numbers on one PO, click all the orders (up to 4) and then click <em>Split Load/Multiple PO Numbers</em>.&nbsp;&nbsp;
-    <strong>4)</strong> For a split load <em>plus</em> a separate regular load (same vendor), select the split rows first then the regular row (3–4 rows total), then click <em>Load Split &amp; Regular Load</em> — generates two POs and one combined vendor email.&nbsp;&nbsp;
+    <strong>4)</strong> For split loads plus a separate regular load, select the split loads and the regular load, then click <em>Load Split &amp; Regular Load</em> — generates two POs and one combined vendor email.&nbsp;&nbsp;
     <strong>5)</strong> For multiple independent POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
-    <strong>5)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
-    <strong>5)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong>, <strong>PO Revision to Accounting</strong>, or <strong>PO Moving</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
+    <strong>6)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
+    <strong>7)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong>, <strong>PO Revision to Accounting</strong>, or <strong>PO Moving</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
   </div>
   <div class="import-body">
     <div class="import-controls">
@@ -679,11 +679,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       </div>
       <div style="flex:1;background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;font-size:13px;color:#5a4a00;line-height:1.7;">
         <strong>📋 How to send the Vendor Email with PO attached:</strong><br>
-        <strong>1.</strong> Generate the PO, then click the button below — a draft opens in Outlook with the PO PDF auto-attached.<br>
-        <strong>2.</strong> Or: Click <em>Vendor Email</em> tab → <em>Copy HTML Body</em> → <em>Open Email</em>, then attach the saved PDF manually.
-        <div style="margin-top:10px;">
-          <button onclick="openInOutlook(0)" style="background:#1a5c2e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#237a3e'" onmouseout="this.style.background='#1a5c2e'">✉ Send POs to Outlook in Browser</button>
-        </div>
+        <strong>1.</strong> Generate the PO(s), then click the <em>Send POs to Outlook in Browser</em> button below — a draft opens in Outlook with the PO PDF(s) auto-attached.
       </div>
     </div>
     <div class="empty-state" id="emptyState">
@@ -2497,9 +2493,9 @@ function updateImportFooter() {
     btnLoad.disabled = true;
     btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
     btnSplitMulti.style.display = "inline-block"; btnSplitMulti.disabled = false;
-    btnSplitReg.style.display = "none"; btnSplitReg.disabled = true; // needs ≥3
+    btnSplitReg.style.display = "inline-block"; btnSplitReg.disabled = false;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
-    hint.textContent = "⚡ Split Load or ⚡# Split+Multi or 📄 Multiple POs (" + count + "): " + names + " • Click another row to add (or select Split & Regular Load with 3–4 rows)";
+    hint.textContent = "⚡ Split Load or ⚡# Split+Multi or ⚡+ Split & Regular or 📄 Multiple POs (" + count + "): " + names + " • Click another row to add";
   } else if (count <= 4) {
     btnLoad.disabled = true;
     btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
@@ -2512,9 +2508,9 @@ function updateImportFooter() {
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
-    btnSplitReg.style.display = "none"; btnSplitReg.disabled = true;
+    btnSplitReg.style.display = "inline-block"; btnSplitReg.disabled = false;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
-    hint.textContent = "📄 Multiple POs (" + count + "): " + names + (count < 20 ? " • Click another row to add (max 20)" : " • Max 20 reached");
+    hint.textContent = "⚡+ Split & Regular | 📄 Multiple POs (" + count + "): " + names + (count < 20 ? " • Click another row to add (max 20)" : " • Max 20 reached");
   }
 }
 
@@ -2772,14 +2768,33 @@ async function loadSplitAndGenerateMultiple() {
 // One combined vendor email covers both.
 async function loadSplitAndRegular() {
   const allIdxs = importSelectedIdxs.slice();
-  if (allIdxs.length < 3 || allIdxs.length > 4) {
-    showToast('Select 3 or 4 rows: the first 2–3 are the split load, the last is the regular load.', 5000);
+  if (allIdxs.length < 2) {
+    showToast('Select at least 2 rows — rows with "split load" in Appt. Time or P/N become the split PO; others become the regular PO.', 5000);
     return;
   }
-  const splitIdxs   = allIdxs.slice(0, -1);   // all but last
-  const regularIdx  = allIdxs[allIdxs.length - 1]; // last
-  const splitRaws   = splitIdxs.map(i => importFiltered[i]);
-  const regularRaw  = importFiltered[regularIdx];
+
+  // Auto-detect split vs regular based on Appt. Time or P/N containing "split load" (case-insensitive)
+  const isSplitRow = idx => {
+    const o = importFiltered[idx];
+    const appt = (o.appt || '').toLowerCase();
+    const pn   = (o.pn   || '').toLowerCase();
+    return appt.includes('split load') || pn.includes('split load');
+  };
+
+  const splitIdxs  = allIdxs.filter(i => isSplitRow(i));
+  const regularIdxs = allIdxs.filter(i => !isSplitRow(i));
+
+  if (splitIdxs.length === 0) {
+    showToast('No split load rows detected. Make sure at least one selected row has "split load" in the Appt. Time or P/N column.', 6000);
+    return;
+  }
+  if (regularIdxs.length === 0) {
+    showToast('No regular load rows detected. Make sure at least one selected row does NOT have "split load" in the Appt. Time or P/N column.', 6000);
+    return;
+  }
+
+  const splitRaws  = splitIdxs.map(i => importFiltered[i]);
+  const regularRaw = importFiltered[regularIdxs[0]]; // use first regular row
   const pp = s => parseFloat(parseNum(s)) || 0;
 
   const vk = matchVendorKey(splitRaws[0].vendor, splitRaws[0].sheet);
@@ -3019,11 +3034,6 @@ async function generateMultiplePOs(fromCheckbox = false) {
     <div class="po-actions no-print">
       <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
       <button class="btn-action" onclick="generateMultiplePOs(true)">↻ Regenerate POs</button>
-    </div>
-    <div class="no-print po-send-hint" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;">
-      <strong>📋 Multiple POs — How to send:</strong><br>
-      All PO PDFs are attached automatically when you click <em>Send POs to Outlook in Browser</em>.<br>
-      Or save each PDF individually by clicking <em>Save PO PDF</em> on each PO tab.
     </div>
     <div class="output-tabs">${tabsHtml}</div>
     ${panelsHtml}`;
