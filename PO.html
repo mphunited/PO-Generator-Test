@@ -1293,7 +1293,6 @@ function buildPOHtml(o, poNum) {
       <div class="po-meta-box"><div class="po-meta-label">Required Ship Date</div><div class="po-meta-value" style="color:#c0392b;font-weight:700;">${o.shipDate}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">${o.shipVia}</div></div>
       <div class="po-meta-box"><div class="po-meta-label">Appt. Time</div><div class="po-meta-value">${o.apptTime ? o.apptTime.replace(/\r\n|\r|\n/g,'<br>') : '--'}</div></div>
-      <div class="po-meta-box"><div class="po-meta-label">Sales Order #</div><div class="po-meta-value">${o.salesOrder||'--'}</div></div>
     </div>
     <table class="po-table">
       <thead><tr><th>Product / Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
@@ -1356,7 +1355,6 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Unit Price</th>';
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + rows + '</tbody></table>';
-  if (o.salesOrder) h += '<p style="margin:6px 0 0;font-size:12pt;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(o.salesOrder) + '</p>';
   h += '<br>';
   h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12pt;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(o.shipVia) + '</td></tr>';
@@ -1437,8 +1435,6 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Unit Price</th>';
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + allRows + '</tbody></table>';
-  var multiSOs = orders.map(function(o){ return o.salesOrder||''; }).filter(function(v){ return v; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
-  if (multiSOs.length > 0) h += '<p style="margin:6px 0 0;font-size:12pt;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(multiSOs.join(', ')) + '</p>';
   h += '<br>';
   h += '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:0;font-size:12pt;">';
   h += '<tr><td style="padding:4px 24px 4px 0;font-weight:700;color:#555;white-space:nowrap;">Ship Via</td><td style="padding:4px 0;">' + escHtml(vendor.shipVia||orders[0].shipVia||'') + '</td></tr>';
@@ -1549,7 +1545,7 @@ function buildMultiShipVendorEmailHtml(orders, poNum, vendor) {
   // Products Ordered table — drops the per-row MPH PO column to widen Description
   h += '<p style="line-height:1.6;margin:0 0 8px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;">Products Ordered</p>';
   h += '<table width="700" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;margin-bottom:20px;">';
-  h += '<thead><tr style="background:#1a3a6e;color:#f2ede6;">';
+  h += '<thead><tr style="background:#00205B;color:#f2ede6;">';
   var isBlindMulti = orders.length > 0 && orders[0].isBlind;
   if (!isBlindMulti) h += '<th style="padding:8px 10px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Customer PO</th>';
   h += '<th style="padding:8px 10px;text-align:left;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;">Product / Description</th>';
@@ -1558,11 +1554,6 @@ function buildMultiShipVendorEmailHtml(orders, poNum, vendor) {
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Unit Price</th>';
   h += '<th style="padding:8px 10px;text-align:right;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;width:90px;">Total</th>';
   h += '</tr></thead><tbody>' + allRows + '</tbody></table>';
-
-  // Sales Order #s — only when present, joined unique
-  var sos = orders.map(function(o){ return (o.salesOrder||'').trim(); })
-    .filter(Boolean).filter(function(v,i,a){ return a.indexOf(v)===i; });
-  if (sos.length > 0) h += '<p style="margin:6px 0 0;font-size:12pt;"><span style="font-weight:700;color:#555;">Sales Order #:</span> ' + escHtml(sos.join(', ')) + '</p>';
 
   // Ship Via — single value (truck-level, not per-leg)
   var shipViaVal = (orders[0] && orders[0].shipVia) || '';
@@ -3473,11 +3464,6 @@ function renderMultiShipPO(legs, vendor, poNum, opts) {
     .filter((v, i, a) => a.indexOf(v) === i);
   const headerCustomerPO = uniqCustPOs.length > 0 ? uniqCustPOs.join(' / ') : 'N/A';
 
-  // Sales Order #s — join unique non-empty values
-  const uniqSOs = legs.map(l => (l.salesOrder || '').trim()).filter(Boolean)
-    .filter((v, i, a) => a.indexOf(v) === i);
-  const headerSO = uniqSOs.length > 0 ? uniqSOs.join(', ') : '--';
-
   // Appt time — use first leg's value (operations rarely sets multiple); show "--" if none
   const headerAppt = (firstLeg.apptTime || '').trim() || '--';
 
@@ -3487,8 +3473,8 @@ function renderMultiShipPO(legs, vendor, poNum, opts) {
   // Order total across all legs
   const orderTotal = legs.reduce((sum, leg) => sum + leg.lines.reduce((s, l) => s + l.qty * l.price, 0), 0);
 
-  // Navy blue (matches MPH United logo) — overrides .wr-order-header's default ink (black) bg
-  const NAVY = '#1a3a6e';
+  // Midnight Navy (matches MPH United logo) — overrides .wr-order-header default ink (black) bg
+  const NAVY = '#00205B';
 
   const sectionsHtml = legs.map((leg, idx) => {
     const linesHtml = leg.lines.map(l => {
@@ -3507,15 +3493,28 @@ function renderMultiShipPO(legs, vendor, poNum, opts) {
       <span><strong style="color:var(--gold)">Customer PO:</strong> ${escHtml(leg.customerPO || 'N/A')}</span>
       <span><strong style="color:var(--gold)">Ship Date:</strong> ${escHtml(leg.shipDate || '')}</span>
       ${leg.apptTime ? `<span><strong style="color:var(--gold)">Appt:</strong> ${escHtml(leg.apptTime)}</span>` : ''}
-      ${leg.salesOrder ? `<span><strong style="color:var(--gold)">SO #:</strong> ${escHtml(leg.salesOrder)}</span>` : ''}
     </div>`;
 
-    // Body Ship To line: hidden entirely when blind
-    const shipToLine = isBlind
-      ? ''
-      : `<div style="font-size:11px;color:var(--ink2);margin-bottom:10px;"><strong>${leg.isCoastal ? 'Ship From' : 'Ship To'}:</strong> ${escHtml(leg.shipTo || '').replace(/\n/g, ', ')}</div>`;
+    // Below the line items table: 2-column layout — Ship To on the left, PO Notes on the right.
+    // When blind, the Ship To column collapses to nothing (per blind policy); the Notes column
+    // expands to full width if any notes exist.
+    const shipToCellHtml = (!isBlind && leg.shipTo && leg.shipTo !== '--')
+      ? `<div style="font-size:11px;color:var(--ink2);"><div style="font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-size:9px;margin-bottom:4px;">${leg.isCoastal ? 'Ship From' : 'Ship To'}</div>${escHtml(leg.shipTo).replace(/\n/g, '<br>')}</div>`
+      : '';
+    const notesCellHtml = leg.notes
+      ? `<div style="font-size:11px;color:var(--ink2);"><div style="font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-size:9px;margin-bottom:4px;">PO Notes</div>${escHtml(leg.notes).replace(/\n/g, '<br>')}</div>`
+      : '';
 
-    // Section uses navy blue header bg (overriding the .wr-order-header default of black)
+    let belowTableHtml = '';
+    if (shipToCellHtml && notesCellHtml) {
+      // Both present — 2 column grid
+      belowTableHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;background:#fafaf5;border:1px solid #ece6d8;border-radius:6px;padding:10px 14px;">${shipToCellHtml}${notesCellHtml}</div>`;
+    } else if (shipToCellHtml) {
+      belowTableHtml = `<div style="margin-top:10px;background:#fafaf5;border:1px solid #ece6d8;border-radius:6px;padding:10px 14px;">${shipToCellHtml}</div>`;
+    } else if (notesCellHtml) {
+      belowTableHtml = `<div style="margin-top:10px;background:#fafaf5;border:1px solid #ece6d8;border-radius:6px;padding:10px 14px;">${notesCellHtml}</div>`;
+    }
+
     return `<div class="wr-order-section">
       <div class="wr-order-header" style="background:${NAVY};">
         <span class="wr-order-label">${headerLabel}</span>
@@ -3523,12 +3522,11 @@ function renderMultiShipPO(legs, vendor, poNum, opts) {
         ${metaLine}
       </div>
       <div class="wr-order-body">
-        ${shipToLine}
-        <table class="po-table" style="width:100%;margin-bottom:${leg.notes ? '10px' : '0'}">
+        <table class="po-table" style="width:100%;margin-bottom:0;">
           <thead><tr style="background:${NAVY};color:var(--bg);"><th>Product / Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
           <tbody>${linesHtml}</tbody>
         </table>
-        ${leg.notes ? `<div class="po-notes"><div class="po-notes-label">PO Notes</div><div class="po-notes-text">${escHtml(leg.notes).replace(/\n/g, '<br>')}</div></div>` : ''}
+        ${belowTableHtml}
       </div>
     </div>`;
   }).join('');
@@ -3554,7 +3552,6 @@ function renderMultiShipPO(legs, vendor, poNum, opts) {
     <div class="po-meta-box"><div class="po-meta-label">Required Ship Date</div><div class="po-meta-value" style="color:#c0392b;font-weight:700;">${escHtml(firstLeg.shipDate || '--')}</div></div>
     <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">${escHtml(shipVia || '--')}</div></div>
     <div class="po-meta-box"><div class="po-meta-label">Appt. Time</div><div class="po-meta-value">${escHtml(headerAppt).replace(/\n/g, '<br>')}</div></div>
-    <div class="po-meta-box"><div class="po-meta-label">Sales Order #</div><div class="po-meta-value">${escHtml(headerSO)}</div></div>
   </div>
   ${sectionsHtml}
   <div style="margin-top:14px;padding:10px 14px;border-top:2px solid var(--gold);display:flex;justify-content:space-between;align-items:center;font-family:'Aptos','Inter',sans-serif;">
