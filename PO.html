@@ -346,8 +346,10 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 
   /* Import panel */
   .import-instructions { display: none; }
-  /* Main screen instruction boxes */
-  .main-screen-instructions { display: none; }
+  /* Main screen instruction boxes — !important overrides the inline display:flex */
+  .main-screen-instructions { display: none !important; }
+  /* Multi-PO instruction hint text — button is kept but description text is hidden */
+  .po-send-hint { display: none !important; }
   .import-topbar { padding: 0 14px; height: 52px; }
   .import-title { font-size: 12px; letter-spacing: 0.5px; }
   .import-subtitle { display: none; }
@@ -404,10 +406,11 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <strong>1)</strong> For single orders, click the order and then click <em>Load into PO Builder</em>.&nbsp;&nbsp;
     <strong>2)</strong> For split orders, click all the orders and then click <em>Load as Split Load</em>.&nbsp;&nbsp;
     <strong>3)</strong> For split loads that need multiple PO numbers on one PO, click all the orders (up to 4) and then click <em>Split Load/Multiple PO Numbers</em>.&nbsp;&nbsp;
-    <strong>4)</strong> For a split load <em>plus</em> a separate regular load (same vendor), select the split rows first then the regular row (3–4 rows total), then click <em>Load Split &amp; Regular Load</em> — generates two POs and one combined vendor email.&nbsp;&nbsp;
+    <strong>3a)</strong> For one shipment with <strong>multiple drop-off locations</strong> (one truck, different Ship To addresses), click all the orders (up to 4) and then click <em>Split / Multi Ship-To</em> — generates one combined PO PDF with a section per destination plus one vendor email.&nbsp;&nbsp;
+    <strong>4)</strong> For split loads plus a separate regular load, select the split loads and the regular load, then click <em>Load Split &amp; Regular Load</em> — generates two POs and one combined vendor email.&nbsp;&nbsp;
     <strong>5)</strong> For multiple independent POs, click all the orders (up to 20) and then click the <em>Generate Multiple POs</em> button.&nbsp;&nbsp;
-    <strong>5)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
-    <strong>5)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong>, <strong>PO Revision to Accounting</strong>, or <strong>PO Moving</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
+    <strong>6)</strong> If you're doing Recycling Orders, click <em>Recycling Orders</em>.&nbsp;&nbsp;
+    <strong>7)</strong> Use the filter to see orders from a given vendor, or use the search to find your order. <em>(If your order is not showing up, make sure the status is <strong>PO Request to Accounting</strong>, <strong>PO Revision to Accounting</strong>, or <strong>PO Moving</strong> on the Excel sheet and/or click Refresh — sometimes it takes a few minutes to pull data.)</em>
   </div>
   <div class="import-body">
     <div class="import-controls">
@@ -446,6 +449,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
     <div style="display:flex;gap:8px;">
       <button class="btn-load-order" id="btnLoadSplit" onclick="loadAsSplitLoad()" disabled style="background:var(--green);display:none;">⚡ Load as Split Load →</button>
       <button class="btn-load-order" id="btnSplitMultiPO" onclick="loadSplitAndGenerateMultiple()" disabled style="background:#6a3a9e;color:#fff;display:none;">⚡# Split Load/Multiple PO Numbers →</button>
+      <button class="btn-load-order" id="btnMultiShip" onclick="loadAsMultiShipTo()" disabled style="background:#0c7e8a;color:#fff;display:none;">⚡⇶ Split / Multi Ship-To →</button>
       <button class="btn-load-order" id="btnSplitRegular" onclick="loadSplitAndRegular()" disabled style="background:#c05c00;color:#fff;display:none;">⚡+ Load Split &amp; Regular Load →</button>
       <button class="btn-load-order" id="btnMultiPO" onclick="generateMultiplePOs()" disabled style="background:#1a3a6e;color:#fff;display:none;">📄 Generate Multiple POs →</button>
       <button class="btn-load-order" id="btnLoadOrder" onclick="loadSelectedOrder()" disabled>Load into PO Builder →</button>
@@ -541,7 +545,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="core_waterloo">Core — Waterloo, IA (135/275/330 IBC, 55gal drum)</option>
             <option value="core_calhoun">Core — Calhoun, GA (275/330 Bottles & IBCs, drums)</option>
             <option value="alliance_greenwood">Alliance Container — Greenwood, IN (275/330 Bottles)</option>
-            <option value="alliance_hillsboro">Alliance Container Texas — Hillsboro, TX (275/330 Bottles)</option>
+            <option value="alliance_hillsboro">UCG (United Container Group) - Bottles — Hillsboro, TX (275/330)</option>
             <option value="ecog_houston">Eco Green — Houston, TX (275/330 Bottles)</option>
           </optgroup>
           <optgroup label="♻️ Rebottle & Washout Plants">
@@ -549,7 +553,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="sec_cleveland">SEC SouthEast Container — Cleveland, MS (275)</option>
             <option value="gpc_gardencity">GPC Great Plains — Garden City, KS (135/275/330)</option>
             <option value="sts_greenwood">STS Superior Tote — Greenwood, IN (275/330)</option>
-            <option value="ucg_hillsboro">United Container Group — Hillsboro, TX (275/330)</option>
+            <option value="ucg_hillsboro">UCG (United Container Group) - IBCS — Hillsboro, TX (275/330)</option>
             <option value="ttw_odessa">TTW Texas Tote Works — Odessa, TX (275/330)</option>
             <option value="tld_socal">TLD Ted Levine Drum — South El Monte, CA</option>
             <option value="rrg_stanwood">RRG Rural Recycling — Stanwood, IA (275)</option>
@@ -573,6 +577,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="basco">Basco</option>
             <option value="advatech_houston">Advatech Industries — Houston, TX</option>
             <option value="cpp_lakewales">CPP — Lake Wales, FL</option>
+            <option value="kp_rockyriver">KP Pallet &amp; Packaging — Cleveland, OH</option>
           </optgroup>
         </select>
       </div>
@@ -600,7 +605,6 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="5 Star">5 Star</option>
             <option value="AAA Cooper">AAA Cooper</option>
             <option value="AgTank">AgTank</option>
-            <option value="Alliance Hillsboro">Alliance Hillsboro</option>
             <option value="APCO">APCO</option>
             <option value="Brenny Transportation">Brenny Transportation</option>
             <option value="Clean Environmental">Clean Environmental</option>
@@ -633,6 +637,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
           <label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:12px;font-weight:600;cursor:pointer;user-select:none;">
             <input type="checkbox" id="isBlindShipment" onchange="onCheckboxChange();" style="width:14px;height:14px;accent-color:var(--gold);cursor:pointer;">
             Blind Shipment
+            <span id="blindAutoHint" style="display:none;font-size:11px;font-weight:500;color:var(--gold);font-style:italic;">(Auto for this vendor)</span>
           </label>
         </div>
       </div>
@@ -677,9 +682,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       </div>
       <div style="flex:1;background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;font-size:13px;color:#5a4a00;line-height:1.7;">
         <strong>📋 How to send the Vendor Email with PO attached:</strong><br>
-        <strong>1.</strong> Click <em>Save PO PDF</em> and save the PO to a folder on your computer.<br>
-        <strong>2.</strong> Click <em>Vendor Email</em>, then click <em>Copy HTML Body</em> to copy the email content.<br>
-        <strong>3.</strong> Click <em>Open Email</em>, paste into the body of the email, then attach the saved PDF.
+        <strong>1.</strong> Generate the PO(s), then click the <em>Send POs to Outlook in Browser</em> button below — a draft opens in Outlook with the PO PDF(s) auto-attached.
       </div>
     </div>
     <div class="empty-state" id="emptyState">
@@ -703,6 +706,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
       <div class="output-panel active" id="outPanel0">
         <div class="po-actions">
           <button class="btn-action primary" onclick="printPO()">🖨 Save PO PDF</button>
+          <button class="btn-action primary" onclick="openInOutlook(0)">✉ Send POs to Outlook in Browser</button>
           <button class="btn-action" onclick="generatePO()">↺ Regenerate</button>
         </div>
         <div class="po-paper" id="poPaper"></div>
@@ -731,7 +735,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
 
 <script>
 // -- CUSTOMER DATA ----------------------------------------------------------
-const CUSTOMERS = [{"name": "Achieved Investments LLC", "phone": "", "email": "cpa@permiancontainers.com", "contact": "", "bill_address": "647 PO Box Terrell TX 75160", "ship_address": "647 PO Box Terrell TX 75160"}, {"name": "ACID PRODUCTS", "phone": "", "email": "nancy.hoiden@acidproducts.net", "contact": "", "bill_address": "600 West 41st Street Chicago IL 60609", "ship_address": "600 West 41st Street Chicago IL 60609"}, {"name": "Adjuvants Unlimited", "phone": "", "email": "apinvoices@au-iou.com", "contact": "", "bill_address": "3621 West 5th Street Tulsa OK 74127", "ship_address": "3621 West 5th Street Tulsa OK 74127"}, {"name": "AG Ingenuity", "phone": "", "email": "kyle.kight@agingenuity.net", "contact": "", "bill_address": "602 Main St Gruver TX 79040", "ship_address": "602 Main St Gruver TX 79040"}, {"name": "Ag Spray Equipment", "phone": "", "email": "Brad.Klassen@agspray.com", "contact": "", "bill_address": "200 S. Derby Lane N. Sioux City SD 57049", "ship_address": "200 S. Derby Lane N. Sioux City SD 57049"}, {"name": "Agpack Inc.", "phone": "", "email": "SGB8714@msn.com", "contact": "", "bill_address": "7501 Saratoga Ave Lubbock TX 79424", "ship_address": "7501 Saratoga Ave Lubbock TX 79424"}, {"name": "AgTank Solutions", "phone": "", "email": "dane@agtanksolutions.com, meredith@agtanksolutions.com", "contact": "", "bill_address": "P.O. Box 1812 Cleveland MS 38372", "ship_address": "P.O. Box 1812 Cleveland MS 38372"}, {"name": "Agtegra Cooperative", "phone": "", "email": "lon.siefken@agtegra.com", "contact": "", "bill_address": "908 Lamont St S Aberdeen SD 57401", "ship_address": "908 Lamont St S Aberdeen SD 57401"}, {"name": "Alliance Container Hillsboro", "phone": "", "email": "", "contact": "Alliance  Container", "bill_address": "", "ship_address": ""}, {"name": "Apex Drum Company", "phone": "", "email": "", "contact": "", "bill_address": "6226 Ferguson Drive Commerce CA 90022", "ship_address": "6226 Ferguson Drive Commerce CA 90022"}, {"name": "Arguindegui Oil", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Arts Milling Service", "phone": "Mobile:(563) 569-8386", "email": "jhans@artsmill.biz", "contact": "", "bill_address": "PO Box 8 Protivin IA 52163", "ship_address": "PO Box 8 Protivin IA 52163"}, {"name": "Avon Plastics", "phone": "", "email": "", "contact": "Avon  Plastics", "bill_address": "210 Ampe DrivePaynesville, MN 56362", "ship_address": "210 Ampe DrivePaynesville, MN 56362"}, {"name": "Axel Americas, LLC", "phone": "", "email": "apvendor@axelch.com", "contact": "", "bill_address": "516 S. 25th West Ave. Tulsa OK 74127", "ship_address": "516 S. 25th West Ave. Tulsa OK 74127"}, {"name": "Axel Royal, LLC", "phone": "", "email": "ap@axelch.com", "contact": "", "bill_address": "516 S. 25th West Ave. Tulsa OK 74127", "ship_address": "516 S. 25th West Ave. Tulsa OK 74127"}, {"name": "Barrel Accessories & Supply Co. (BASCO)", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 7203 Carol Stream IL 60197", "ship_address": "PO BOX 7203 Carol Stream IL 60197"}, {"name": "Barton Solvents Bettendorf Branch IA", "phone": "", "email": "bt_eft@barsol.com", "contact": "", "bill_address": "204 36th St Bettendorf IA 52722", "ship_address": "204 36th St Bettendorf IA 52722"}, {"name": "Barton Solvents El Dorado Branch, KS", "phone": "", "email": "el_ap@barsol.com", "contact": "", "bill_address": "2601 Pioneer Drive El Dorado KS 67042 USA", "ship_address": "2601 Pioneer Drive El Dorado KS 67042 USA"}, {"name": "Berlin Packaging", "phone": "", "email": "ubpinvoices@BerlinPackaging.com", "contact": "Berlin  Packaging", "bill_address": "525 West Monroe Street14th Floor Chicago IL 60661", "ship_address": "525 West Monroe Street14th Floor Chicago IL 60661"}, {"name": "BNSF Logistics", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Brandt", "phone": "", "email": "", "contact": "Brandt", "bill_address": "2935 S Koke Mill RoadSpringfield IL 62711", "ship_address": "211 west State rte 125Pleasant Plains Il 62677"}, {"name": "Caleb Chemical Inc.", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1263 Frankfort IL", "ship_address": "PO Box 1263 Frankfort IL"}, {"name": "Catalynt Solutions, INC", "phone": "", "email": "", "contact": "", "bill_address": "22817 102nd Place West Edmonds WA 98020", "ship_address": "22817 102nd Place West Edmonds WA 98020"}, {"name": "CDF Corporation", "phone": "", "email": "", "contact": "", "bill_address": "57 Armstrong Rd. Plymouth MA 02360 U.S.", "ship_address": "57 Armstrong Rd. Plymouth MA 02360 U.S."}, {"name": "Celta Chemical, Inc.", "phone": "Phone:(314) 882-0039", "email": "eileen@celtachem.com", "contact": "", "bill_address": "PO Box 124 Grover MO 63040", "ship_address": "PO Box 124 Grover MO 63040"}, {"name": "Centurion Container, Lewisburg TN", "phone": "", "email": "ccowley@enterprizecontainer.com", "contact": "", "bill_address": "1632 Childress Road Lewisburg TN 37091", "ship_address": "671 Garrett Parkway Lewisburg TN 37091"}, {"name": "Ceres Solutions", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 3312802 W State Road 352Boswell, Indiana 47921Attn: Greg Babcock", "ship_address": "PO Box 3312802 W State Road 352Boswell, Indiana 47921Attn: Greg Babcock"}, {"name": "CHEMLINE, INC.", "phone": "", "email": "ap@chemline.net", "contact": "", "bill_address": "5151 Natural Bridge Ave St Louis MO 63115", "ship_address": "5151 Natural Bridge Ave St Louis MO 63115"}, {"name": "Chemorse", "phone": "", "email": "CraigA@chemorse.com", "contact": "", "bill_address": "1596 NE 58th Township Des Moines IA 50313", "ship_address": "1596 NE 58th Township Des Moines IA 50313"}, {"name": "Chemtrade Refinery Services Inc.", "phone": "", "email": "", "contact": "", "bill_address": "5101 West 21st. Street Tulsa OK 74107", "ship_address": "5101 West 21st. Street Tulsa OK 74107"}, {"name": "Chromascape", "phone": "", "email": "", "contact": "Chromascape", "bill_address": "508 Industrial BlvdAtlanta, TX 75551903-796-7127", "ship_address": "508 Industrial BlvdAtlanta, TX 75551903-796-7127"}, {"name": "CHS High Plains", "phone": "", "email": "jacob.weaver@chsinc.com", "contact": "", "bill_address": "Attn: CHS Accounts PayablePO Box 64089 Saint Paul MN 55164-0089 USA", "ship_address": "Attn: CHS Accounts PayablePO Box 64089 Saint Paul MN 55164-0089 USA"}, {"name": "CL Smith", "phone": "", "email": "", "contact": "CL  Smith", "bill_address": "1311 South 39th Street St. Louis MO 63110 Terms: 1% 7 NET 15", "ship_address": "1311 South 39th Street St. Louis MO 63110 Terms: 1% 7 NET 15"}, {"name": "Clean Environmental Management llc", "phone": "", "email": "brice@cleanenvironmentalmanagementllc.com, ghudson@cleanenvironmentalmanagementllc.com", "contact": "", "bill_address": "1184 Warm Winds Drive O'Fallon MO 63366", "ship_address": "1184 Warm Winds Drive O'Fallon MO 63366"}, {"name": "Coastal Bend Containers Inc", "phone": "", "email": "", "contact": "", "bill_address": "4752 County Rd 40 Robstown Texas 78380", "ship_address": "4752 County Rd 40 Robstown Texas 78380"}, {"name": "Coastal Container Services", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Colorbiotics", "phone": "", "email": "BCC-Invoices-USA@mbcc-group.com", "contact": "", "bill_address": "ISS DD - Colorbiotics, LLCPO BOX 696402 San Antonio TX 78269", "ship_address": "ISS DD - Colorbiotics, LLCPO BOX 696402 San Antonio TX 78269"}, {"name": "Cone Solvents Frontier Logistical Services", "phone": "", "email": "", "contact": "", "bill_address": "600 N. Bryant Oklahoma City OK 73117", "ship_address": "600 N. Bryant Oklahoma City OK 73117"}, {"name": "Container Compliance", "phone": "", "email": "dmackall@containercompliance.com", "contact": "", "bill_address": "5151 Denison Avenue Cleveland OH 44102", "ship_address": "5151 Denison Avenue Cleveland OH 44102"}, {"name": "Container Connectionz-Customer", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 517 Isanti MN 55040", "ship_address": "PO Box 517 Isanti MN 55040"}, {"name": "Container Recycling Inc.", "phone": "Phone:(256) 565-4896", "email": "", "contact": "", "bill_address": "Container Recyclers230 Cockrell Ave SW, Decatur AL AL", "ship_address": "Container Recyclers230 Cockrell Ave SW, Decatur AL AL"}, {"name": "Container Services Network, LLC", "phone": "", "email": "MTomlinson@ContainerServicesNetwork.com", "contact": "", "bill_address": "3940 Verde Vista Dr Thousand Oaks CA 91360-2650", "ship_address": "3940 Verde Vista Dr Thousand Oaks CA 91360-2650"}, {"name": "Container Technology  INC", "phone": "", "email": "payables@containertechnology.com", "contact": "", "bill_address": "8550 W Charleston Blvd Suite 102-185 Las Vegas NV 89117", "ship_address": "8550 W Charleston Blvd Suite 102-185 Las Vegas NV 89117"}, {"name": "CORE PLASTECH INTERNATIONAL", "phone": "", "email": "", "contact": "CORE PLASTECH INTERNATIONAL", "bill_address": "15555 La Salle St. South Holland, IL 60473", "ship_address": "15555 La Salle St. South Holland, IL 60473"}, {"name": "Cotey Chemical Co.", "phone": "", "email": "", "contact": "", "bill_address": "P.O.  Box 2039 Lubbock TX 79408", "ship_address": "P.O.  Box 2039 Lubbock TX 79408"}, {"name": "CPU", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Crown Packaging International, Inc.", "phone": "", "email": "boylen@crownpolycon.com", "contact": "Crown Packaging International, Inc.", "bill_address": "8919 Colorado Street Merrillville, IN 46410", "ship_address": "8919 Colorado Street Merrillville, IN 46410"}, {"name": "Cyclone Seed / Chemical", "phone": "", "email": "", "contact": "", "bill_address": "111 Cyclone Ave P.O. Box 618 Harlan Iowa 51537", "ship_address": "111 Cyclone Ave P.O. Box 618 Harlan Iowa 51537"}, {"name": "Delaval Manufacturing", "phone": "", "email": "ap.us.dlm@delaval.com", "contact": "", "bill_address": "11100 Congress Avenue Kansas City MO 64153", "ship_address": "11100 Congress Avenue Kansas City MO 64153"}, {"name": "Diamond Vogel", "phone": "", "email": "", "contact": "", "bill_address": "1110 Albanv Place SE PO Box 380 Orange City IA 51041", "ship_address": "1110 Albanv Place SE PO Box 380 Orange City IA 51041"}, {"name": "Drexel Chemical Co.", "phone": "", "email": "", "contact": "Drexel Chemical Co.", "bill_address": "P.O. Box 13327Memphis, TN 38113-0327", "ship_address": "P.O. Box 13327Memphis, TN 38113-0327"}, {"name": "Drill Green Petro", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Eagle Ford Containers", "phone": "", "email": "", "contact": "", "bill_address": "4836 Fish Lane Beeville TX 78102", "ship_address": "4836 Fish Lane Beeville TX 78102"}, {"name": "Earth Science Laboratories, Inc", "phone": "", "email": "", "contact": "", "bill_address": "903 N. 47th Street Suite 105 Rogers AR 72756", "ship_address": "903 N. 47th Street Suite 105 Rogers AR 72756"}, {"name": "ECO-PAK", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "EcoGreen - Customer", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "EGE Products", "phone": "", "email": "accounting@egebio.com", "contact": "EGE  Products", "bill_address": "PO Box 538450 CR C Minneola KS 67865", "ship_address": "PO Box 538450 CR C Minneola KS 67865"}, {"name": "Enterprize Container", "phone": "", "email": "ccowley@enterprizecontainer.com, jennifer@enterprizecontainer.com", "contact": "Enterprize  Container", "bill_address": "1632 Childress Road Lewisburg TN 37091", "ship_address": "1632 Childress Road Lewisburg TN 37091"}, {"name": "Enviro Containers and Recycling", "phone": "", "email": "", "contact": "", "bill_address": "5904 50th Avenue Innisfail Alberta T4G 1 R7 Canada", "ship_address": "5904 50th Avenue Innisfail Alberta T4G 1 R7 Canada"}, {"name": "Enviro Science Technologies Inc", "phone": "", "email": "est@envirosciencetech.com", "contact": "", "bill_address": "15785 S Keeler Terrace Olathe, KS 66062", "ship_address": "15785 S Keeler Terrace Olathe, KS 66062"}, {"name": "Equity Exchange", "phone": "", "email": "", "contact": "", "bill_address": "4219 S. Main Street Perryton TX 79070", "ship_address": "4219 S. Main Street Perryton TX 79070"}, {"name": "Eureka Chemical Lab", "phone": "", "email": "billing@eureka-inc.com", "contact": "", "bill_address": "7277 S 2nd Line Rd La Porte IN 46350", "ship_address": "7277 S 2nd Line Rd La Porte IN 46350"}, {"name": "Exacto", "phone": "", "email": "", "contact": "Exacto", "bill_address": "200 Old Factory RoadSharon, WI 53585", "ship_address": "200 Old Factory RoadSharon, WI 53585"}, {"name": "Farmchem", "phone": "", "email": "kelly.eckenrod@farmchem.com", "contact": "", "bill_address": "616 Madison St. Floyd IA 50435", "ship_address": "616 Madison St. Floyd IA 50435"}, {"name": "Floratine Products Group", "phone": "", "email": "ashook@floratine.com", "contact": "", "bill_address": "355. E South Street Collierville TN 38017", "ship_address": "355. E South Street Collierville TN 38017"}, {"name": "Florida Coastal Colors, L.L.C.", "phone": "", "email": "jenn@floridacoastalcolors.com", "contact": "", "bill_address": "PO Box 778, Helena AL 35080", "ship_address": "PO Box 778, Helena AL 35080"}, {"name": "Four Seasons Containers LLC", "phone": "Mobile:(432) 853-4398", "email": "ipadilla@permiancontainers.com, mbriggs@permiancontainers.com, lrodriguez@permiancontainers.com", "contact": "", "bill_address": "PO Box 647 Terrell TX 75160", "ship_address": "PO Box 647 Terrell TX 75160"}, {"name": "Frontline Logistics", "phone": "", "email": "", "contact": "", "bill_address": "P.O. BOX 756 South Lyon MI 48178", "ship_address": "P.O. BOX 756 South Lyon MI 48178"}, {"name": "G. Phillips and Sons", "phone": "", "email": "", "contact": "G. Phillips and Sons", "bill_address": "8987 Wildlife LoopSarasota, FL 34238", "ship_address": "8987 Wildlife LoopSarasota, FL 34238"}, {"name": "Gates Engineered Lubricants, LLC", "phone": "", "email": "sara@gatesel.com", "contact": "", "bill_address": "18906 E Industrial Pkwy New Caney TX 77357", "ship_address": "18906 E Industrial Pkwy New Caney TX 77357"}, {"name": "Genesis Custom Chemical Blending", "phone": "", "email": "AP@genesisccb.com", "contact": "", "bill_address": "2708 NE Main St Ennis TX 75119", "ship_address": "2708 NE Main St Ennis TX 75119"}, {"name": "Geo Chemicals", "phone": "Phone:(620) 204-7200", "email": "accountspayable@geo-chemicals.com", "contact": "", "bill_address": "517 E 30th Ave STE E Hutchinson KS 67502", "ship_address": "517 E 30th Ave STE E Hutchinson KS 67502"}, {"name": "Great Plains Container LLC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Hampel Oil Distributors, Inc", "phone": "", "email": "Chad.Hodges@hampeloil.com", "contact": "", "bill_address": "3531 N Ridge Rd, UPPR 2 Wichita KS 67205", "ship_address": "3531 N Ridge Rd, UPPR 2 Wichita KS 67205"}, {"name": "Harris Vacations", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Hartland Lubricants", "phone": "", "email": "brenda.Byrne@HTPEnergy.com, lydia.eddy@hartlandlubes.com", "contact": "", "bill_address": "2455 CommercialDrive Sparta WI 54656", "ship_address": "2455 CommercialDrive Sparta WI 54656"}, {"name": "HB Fuller", "phone": "", "email": "", "contact": "", "bill_address": "4440 Malsbury Road Blue Ash OH 45242", "ship_address": "4440 Malsbury Road Blue Ash OH 45242"}, {"name": "Helena Agri-Enterprises", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Hitachi Energy", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Holganix Inc.", "phone": "", "email": "", "contact": "", "bill_address": "1000 N. 5 Points Road West Chester PA 19380", "ship_address": "1000 N. 5 Points Road West Chester PA 19380"}, {"name": "IBC tote Recycling", "phone": "", "email": "AP@mrawasteexchange.com", "contact": "", "bill_address": "PO Box 2398 Austin TX 78768", "ship_address": "PO Box 2398 Austin TX 78768"}, {"name": "IMACC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Industrial Chemicals Jonesboro.", "phone": "", "email": "", "contact": "", "bill_address": "7536 Jonesboro Road Jonesboro GA 30236", "ship_address": "7536 Jonesboro Road Jonesboro GA 30236"}, {"name": "Industrial Chemicals, Birmingham", "phone": "", "email": "", "contact": "", "bill_address": "1133 Roberts Industrial Drive Birmingham AL 35208", "ship_address": "1133 Roberts Industrial Drive Birmingham AL 35208"}, {"name": "Industrial Container Services", "phone": "", "email": "", "contact": "Industrial Container Services", "bill_address": "", "ship_address": ""}, {"name": "Industrial Container Services - Lakeland", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Industrial Container Services - NC, LLC", "phone": "", "email": "", "contact": "", "bill_address": "1704 Barnes StreetReidsville, NC 27320", "ship_address": "1704 Barnes StreetReidsville, NC 27320"}, {"name": "Industrial Containers of Texas", "phone": "", "email": "", "contact": "Industrial Containers of Texas", "bill_address": "7502 Mesa Dr.Houston, TX 77028", "ship_address": "7502 Mesa Dr.Houston, TX 77028"}, {"name": "Industrial Oils Unlimited", "phone": "", "email": "", "contact": "", "bill_address": "3621 W 5th St Tulsa OK 74127", "ship_address": "3621 W 5th St Tulsa OK 74127"}, {"name": "Integrity Bio-Chem", "phone": "Phone:(817) 402-0444", "email": "cclark@integritybiochem.com", "contact": "", "bill_address": "1100 North Cresson Hwy Cresson TX 76035", "ship_address": "1100 North Cresson Hwy Cresson TX 76035"}, {"name": "Interstate AG Containers", "phone": "", "email": "bbittle@gmail.com", "contact": "Brad  Bittle", "bill_address": "PO BOX 265 BUTTONWILLOW CA 93206", "ship_address": "PO BOX 265 BUTTONWILLOW CA 93206"}, {"name": "IRP Logistics", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 718Highwood IL. 60040", "ship_address": "PO BOX 718Highwood IL. 60040"}, {"name": "KCI-KINGSBURY", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Kemin Nutrisurance", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 70 Des Moines IA 50306", "ship_address": "PO Box 70 Des Moines IA 50306"}, {"name": "Kodiak AI", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Koppers Performance Chemicals,Inc.", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "KSolv", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Landus", "phone": "", "email": "", "contact": "", "bill_address": "1095 T Avenue Boone IA 50036", "ship_address": "1095 T Avenue Boone IA 50036"}, {"name": "LES PLASTIQUES DC INC.", "phone": "", "email": "", "contact": "LES PLASTIQUES DC INC.", "bill_address": "5480-1 Boul. Industriel, Waterloo, QcJ0E 2N0, Canada", "ship_address": "5480-1 Boul. Industriel, Waterloo, QcJ0E 2N0, Canada"}, {"name": "Lionel's Drums, Pallets & Totes, Corp", "phone": "", "email": "", "contact": "", "bill_address": "15334 Southwood Trace Lane Houston TX 77049", "ship_address": "15334 Southwood Trace Lane Houston TX 77049"}, {"name": "Loveland", "phone": "", "email": "", "contact": "Loveland", "bill_address": "P.O. Box 660145Dallas, TX, 75266, US", "ship_address": "P.O. Box 660145Dallas, TX, 75266, US"}, {"name": "M-Con Solutions", "phone": "Phone:(417) 322-6424", "email": "mattc@m-consolutions.com", "contact": "", "bill_address": "2585 S Chapel Drive Springfield MO 65809", "ship_address": "2585 S Chapel Drive Springfield MO 65809"}, {"name": "Master Builders Solutions Construction Systems US, LLC", "phone": "", "email": "", "contact": "", "bill_address": "889 Valley Park DriveShakopee, MN USA 55379", "ship_address": "889 Valley Park DriveShakopee, MN USA 55379"}, {"name": "MBCC Group", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "McKenzie Begin and Associates", "phone": "", "email": "", "contact": "McKenzie Begin and Associates", "bill_address": "Division of K & S McKenzie Ltd.Suite 201-701 Pembina HighwayWinnipeg, MB R3M 2L7", "ship_address": "Division of K & S McKenzie Ltd.Suite 201-701 Pembina HighwayWinnipeg, MB R3M 2L7"}, {"name": "Microsource", "phone": "", "email": "", "contact": "", "bill_address": "7632 Country Road 101 Shakopee MN 55379", "ship_address": "7632 Country Road 101 Shakopee MN 55379"}, {"name": "Mike Harding", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Mitchell Container Services", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Mitten", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Nano Hafa LLC and HaFa Industries Inc.", "phone": "Mobile:308-44-4622", "email": "cbeezley@goithafa.com", "contact": "", "bill_address": "PO Box 3046 Kearney NE 68848", "ship_address": "PO Box 3046 Kearney NE 68848"}, {"name": "Neighbor Distribution, Inc.", "phone": "", "email": "", "contact": "Neighbor Distribution, Inc.", "bill_address": "PO Box 31261St. Louis, MO 63131-0261", "ship_address": "PO Box 31261St. Louis, MO 63131-0261"}, {"name": "NEW VISION TRANSPORTATION SVCS.,INC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Next Day Container", "phone": "", "email": "", "contact": "", "bill_address": "5935 N. 9th Street Delphi IN 46923", "ship_address": "5935 N. 9th Street Delphi IN 46923"}, {"name": "Nutrien Ag Solutions", "phone": "", "email": "", "contact": "Nutrien", "bill_address": "PO Box 660127 Dallas TX 75266", "ship_address": "PO Box 660127 Dallas TX 75266"}, {"name": "Obsidian Chemical Solutions", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Odom Industries", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Omni Polymers Intl Corp.", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Oro Agri - Rovensa Next", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Pack Depot Container", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1270 Fairhope AL 36532", "ship_address": "PO Box 1270 Fairhope AL 36532"}, {"name": "Pencco, Inc.", "phone": "Phone:(979) 885-0005", "email": "AP@pencco.com", "contact": "", "bill_address": "P.O. Box 600 San Felipe TX 77473", "ship_address": "P.O. Box 600 San Felipe TX 77473"}, {"name": "Permian Basin Container", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "PERRYTON EQUITY EXCHANGE", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 889, 4219 S MAIN PERRYTON TX 79070", "ship_address": "PO BOX 889, 4219 S MAIN PERRYTON TX 79070"}, {"name": "phoenix flooring", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Pinnacle Resources Inc.", "phone": "", "email": "", "contact": "", "bill_address": "5504 Jefferson Pkwy. Pine Bluff AR 71602", "ship_address": "5504 Jefferson Pkwy. Pine Bluff AR 71602"}, {"name": "Pipeline Packaging", "phone": "", "email": "invoices_receiving@pipelinepackaging.com", "contact": "", "bill_address": "100 Executive Parkway Hudson OH 44236 USA", "ship_address": "100 Executive Parkway Hudson OH 44236 USA"}, {"name": "Plant Nuco", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Plasmine Technology", "phone": "", "email": "", "contact": "", "bill_address": "3298-35 Summit Blvd Pensecola FL 32503", "ship_address": "3298-35 Summit Blvd Pensecola FL 32503"}, {"name": "Platte Chemical Co", "phone": "", "email": "LPIAP@nutrien.com", "contact": "pla", "bill_address": "P.O. Box 660145 Dallas TX 75266", "ship_address": "P.O. Box 660145 Dallas TX 75266"}, {"name": "Precision Dynamics, INC", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1595 Burleson TX 76097", "ship_address": "PO Box 1595 Burleson TX 76097"}, {"name": "PRECISION IBC, INC", "phone": "", "email": "terra@precisionibc.com", "contact": "", "bill_address": "8054 McGowin Dr Fairhope AL 36532", "ship_address": "8054 McGowin Dr Fairhope AL 36532"}, {"name": "Presley Enterprises", "phone": "", "email": "", "contact": "", "bill_address": "3181 State Highway BB Sikeston MO 63801", "ship_address": "3181 State Highway BB Sikeston MO 63801"}, {"name": "PRO CO-OP", "phone": "", "email": "", "contact": "", "bill_address": "SCOBEY MT", "ship_address": "SCOBEY MT"}, {"name": "ProTank", "phone": "", "email": "", "contact": "", "bill_address": "8971 Yahweh Dr. Olive Branch MS 38654", "ship_address": "8971 Yahweh Dr. Olive Branch MS 38654"}, {"name": "Quanta Containers, LLC", "phone": "", "email": "", "contact": "", "bill_address": "15801 Huron St. Taylor MI 48180", "ship_address": "15801 Huron St. Taylor MI 48180"}, {"name": "Ralco Nutrition", "phone": "", "email": "", "contact": "", "bill_address": "100 W. College Dr. Suite 200 Marshall MN 56258", "ship_address": "100 W. College Dr. Suite 200 Marshall MN 56258"}, {"name": "Research Solutions", "phone": "", "email": "", "contact": "", "bill_address": "100 Tony Holmes Drive Pelham AL 35124", "ship_address": "100 Tony Holmes Drive Pelham AL 35124"}, {"name": "Responsible Container", "phone": "", "email": "", "contact": "Responsible  Container", "bill_address": "5300 Hall St. St. Louis. MO, 63147", "ship_address": "5300 Hall St. St. Louis. MO, 63147"}, {"name": "Rivas Logistics LLC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Rosen's INC", "phone": "", "email": "rosensap@riw2000.com", "contact": "", "bill_address": "1120 Lake Avenue PO Box 933 Fairmont MN 56031", "ship_address": "1120 Lake Avenue PO Box 933 Fairmont MN 56031"}, {"name": "Rosen's Inc.", "phone": "", "email": "", "contact": "", "bill_address": "1120 Lake Avenue  PO Box 933 Fairmont MN 56031", "ship_address": "1120 Lake Avenue  PO Box 933 Fairmont MN 56031"}, {"name": "RRG", "phone": "", "email": "", "contact": "RRG", "bill_address": "", "ship_address": ""}, {"name": "Shotwell Hydrogenics", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Sigma Recycling Inc.", "phone": "", "email": "", "contact": "Sigma Recycling Inc.", "bill_address": "5675 JIMMY CARTER BLVDSUITE 598,NORCROSS, GA - 30071", "ship_address": "5675 JIMMY CARTER BLVDSUITE 598,NORCROSS, GA - 30071"}, {"name": "Sika Corporation", "phone": "", "email": "AccountsPayable@us.sika.com", "contact": "", "bill_address": "PO Box 710 Lyndhurst NJ 07071-0710", "ship_address": "PO Box 710 Lyndhurst NJ 07071-0710"}, {"name": "Simplot", "phone": "", "email": "", "contact": "Simplot", "bill_address": "1702 Levelland Hwy, Brownfield, TX 79316Attn: Dottie Mayesdottie.mayes@simplot.com806.456.7210", "ship_address": "1702 Levelland Hwy, Brownfield, TX 79316Attn: Dottie Mayesdottie.mayes@simplot.com806.456.7210"}, {"name": "Skyland Grain", "phone": "", "email": "", "contact": "Skyland  Grain", "bill_address": "PO BOX 129BUSHLAND TX 79012", "ship_address": "PO BOX 129BUSHLAND TX 79012"}, {"name": "SNRG Resources, INC.", "phone": "", "email": "", "contact": "SNRG Resources, INC.", "bill_address": "PO Box 2151 Foley, AL 36536", "ship_address": "PO Box 2151 Foley, AL 36536"}, {"name": "Sound Resource Solutions, LLC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Southern Container", "phone": "", "email": "", "contact": "Southern  Container", "bill_address": "340 Howell Drive Dalton, GA 30721", "ship_address": "340 Howell Drive Dalton, GA 30721"}, {"name": "SPADECHEM LLC", "phone": "", "email": "rushilshah@spadechem.com", "contact": "", "bill_address": "80 MARTIN LN, ELK GROVE VILLAGE IL 60007", "ship_address": "80 MARTIN LN, ELK GROVE VILLAGE IL 60007"}, {"name": "SpecChem", "phone": "", "email": "invoice@specchem.com", "contact": "", "bill_address": "1511 Baltimore Avenue, Ste. 600 Kansas City MO 64108", "ship_address": "1511 Baltimore Avenue, Ste. 600 Kansas City MO 64108"}, {"name": "Specialty Adhesives & Coatings", "phone": "", "email": "", "contact": "Specialty Adhesives & Coatings", "bill_address": "PO BOX 18445Memphis, TN 38181-0445", "ship_address": "PO BOX 18445Memphis, TN 38181-0445"}, {"name": "Specialty Ag Formulations", "phone": "", "email": "", "contact": "", "bill_address": "1658 Mission Ave. Aurora NE 68818", "ship_address": "1658 Mission Ave. Aurora NE 68818"}, {"name": "Spectrum Adhesives", "phone": "", "email": "", "contact": "", "bill_address": "5611 Universal Drive Memphis TN 38118", "ship_address": "5611 Universal Drive Memphis TN 38118"}, {"name": "Star of the West Milling Company", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Steve Strba Consulting Inc", "phone": "", "email": "strbaconsulting@gmail.com", "contact": "", "bill_address": "27 Paisley Avenue North Hamilton Ontario L8S 4G5 Canada", "ship_address": "27 Paisley Avenue North Hamilton Ontario L8S 4G5 Canada"}, {"name": "Steve Strba Consulting INC.", "phone": "", "email": "", "contact": "", "bill_address": "27 Paisley Avenue North Hamilton, ON   Canada", "ship_address": "27 Paisley Avenue North Hamilton, ON   Canada"}, {"name": "Superior Tote Solutions", "phone": "", "email": "", "contact": "Superior Tote Solutions", "bill_address": "401 North Main StreetSummitville, IN 46070", "ship_address": "401 North Main StreetSummitville, IN 46070"}, {"name": "TBK One LLC", "phone": "Phone:(940) 577-1766", "email": "accounting@tbk-one.com", "contact": "", "bill_address": "11425 Mathis Ave STE 507 Farmers Branch TX 75234 USA", "ship_address": "11425 Mathis Ave STE 507 Farmers Branch TX 75234 USA"}, {"name": "Team Laboratory Chemical, LLC", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1467 Detroit Lakes MN 56502", "ship_address": "PO Box 1467 Detroit Lakes MN 56502"}, {"name": "TED LEVINE DRUM COMPANY", "phone": "Phone:(626) 579-1084", "email": "david@tldrumco.com", "contact": "", "bill_address": "1817 CHICO AVENUE SO. EL MONTE CA 91733", "ship_address": "1817 CHICO AVENUE SO. EL MONTE CA 91733"}, {"name": "Texas Tank Works, Terrell", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 918 Terrell TX 75160", "ship_address": "PO BOX 918 Terrell TX 75160"}, {"name": "Texas Tote Works-Odessa", "phone": "", "email": "mbriggs@permiancontainers.com", "contact": "", "bill_address": "16691 Basin St Odessa TX 79763", "ship_address": "16691 Basin St Odessa TX 79763"}, {"name": "The Andersons", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 119 1947 Briarfield Blvd. Maumee OH 43537", "ship_address": "PO Box 119 1947 Briarfield Blvd. Maumee OH 43537"}, {"name": "The Cary Company", "phone": "", "email": "", "contact": "", "bill_address": "1195 W. Fullerton Ave. Addison IL 60101", "ship_address": "1195 W. Fullerton Ave. Addison IL 60101"}, {"name": "The Way, Inc", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Tote Detailing", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Transchemical", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Tri-Rinse", "phone": "", "email": "", "contact": "", "bill_address": "1402 S. 2nd Street St. Louis MO 63104", "ship_address": "1402 S. 2nd Street St. Louis MO 63104"}, {"name": "Unique Environmental Service Inc.", "phone": "", "email": "", "contact": "Unique Environmental Service Inc.", "bill_address": "935 Sandy Beach Road Pickering, ON L1W 1Z5", "ship_address": "935 Sandy Beach Road Pickering, ON L1W 1Z5"}, {"name": "United Container Group LLC -customer", "phone": "", "email": "", "contact": "", "bill_address": "251 Industrial Loop Hillsboro TX 76645", "ship_address": "251 Industrial Loop Hillsboro TX 76645"}, {"name": "Vallen Belmont, NC", "phone": "", "email": "", "contact": "Vallen Belmont, NC", "bill_address": "2100 The Oaks ParkwyBelmont, NC 28012", "ship_address": "2100 The Oaks ParkwyBelmont, NC 28012"}, {"name": "Vantage Specialties, Inc.", "phone": "", "email": "", "contact": "Vantage Specialties, Inc.", "bill_address": "4650 South Racine AveChicago, IL 60609", "ship_address": "4650 South Racine AveChicago, IL 60609"}, {"name": "VRC Technologies, Inc.", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Water Tech", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Webb Chemical", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Wells Ag Supply", "phone": "", "email": "", "contact": "Wells Ag Supply", "bill_address": "55560 150th AvenueFonda, IA 50540", "ship_address": "55560 150th AvenueFonda, IA 50540"}, {"name": "West Drum & Container", "phone": "Phone:(903) 643-7001", "email": "twest@westdrum.com", "contact": "", "bill_address": "5124 Estes PKWY Longview TX 75603", "ship_address": "5124 Estes PKWY Longview TX 75603"}, {"name": "Wilbur Elis Dalhart TX", "phone": "", "email": "PDominguez@wilburellis.com", "contact": "", "bill_address": "3325 Spur 24 Dalhart TX 79022", "ship_address": "3325 Spur 24 Dalhart TX 79022"}, {"name": "Wilbur Ellis", "phone": "", "email": "", "contact": "", "bill_address": "265 IH-35 South Devine TX 78016", "ship_address": ""}, {"name": "Winfield United", "phone": "", "email": "", "contact": "Winfield  United", "bill_address": "1834 West Point Road West Point, Iowa 52656", "ship_address": "1834 West Point Road West Point, Iowa 52656"}];
+const CUSTOMERS = [{"name": "Achieved Investments LLC", "phone": "", "email": "cpa@permiancontainers.com", "contact": "", "bill_address": "647 PO Box Terrell TX 75160", "ship_address": "647 PO Box Terrell TX 75160"}, {"name": "ACID PRODUCTS", "phone": "", "email": "nancy.hoiden@acidproducts.net", "contact": "", "bill_address": "600 West 41st Street Chicago IL 60609", "ship_address": "600 West 41st Street Chicago IL 60609"}, {"name": "Adjuvants Unlimited", "phone": "", "email": "apinvoices@au-iou.com", "contact": "", "bill_address": "3621 West 5th Street Tulsa OK 74127", "ship_address": "3621 West 5th Street Tulsa OK 74127"}, {"name": "AG Ingenuity", "phone": "", "email": "kyle.kight@agingenuity.net", "contact": "", "bill_address": "602 Main St Gruver TX 79040", "ship_address": "602 Main St Gruver TX 79040"}, {"name": "Ag Spray Equipment", "phone": "", "email": "Brad.Klassen@agspray.com", "contact": "", "bill_address": "200 S. Derby Lane N. Sioux City SD 57049", "ship_address": "200 S. Derby Lane N. Sioux City SD 57049"}, {"name": "Agpack Inc.", "phone": "", "email": "SGB8714@msn.com", "contact": "", "bill_address": "7501 Saratoga Ave Lubbock TX 79424", "ship_address": "7501 Saratoga Ave Lubbock TX 79424"}, {"name": "AgTank Solutions", "phone": "", "email": "dane@agtanksolutions.com, meredith@agtanksolutions.com", "contact": "", "bill_address": "P.O. Box 1812 Cleveland MS 38372", "ship_address": "P.O. Box 1812 Cleveland MS 38372"}, {"name": "Agtegra Cooperative", "phone": "", "email": "lon.siefken@agtegra.com", "contact": "", "bill_address": "908 Lamont St S Aberdeen SD 57401", "ship_address": "908 Lamont St S Aberdeen SD 57401"}, {"name": "United Container Group -customer", "phone": "", "email": "", "contact": "United Container", "bill_address": "251 Industrial Loop Hillsboro TX 76645", "ship_address": "251 Industrial Loop Hillsboro TX 76645"}, {"name": "Apex Drum Company", "phone": "", "email": "", "contact": "", "bill_address": "6226 Ferguson Drive Commerce CA 90022", "ship_address": "6226 Ferguson Drive Commerce CA 90022"}, {"name": "Arguindegui Oil", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Arts Milling Service", "phone": "Mobile:(563) 569-8386", "email": "jhans@artsmill.biz", "contact": "", "bill_address": "PO Box 8 Protivin IA 52163", "ship_address": "PO Box 8 Protivin IA 52163"}, {"name": "Avon Plastics", "phone": "", "email": "", "contact": "Avon  Plastics", "bill_address": "210 Ampe DrivePaynesville, MN 56362", "ship_address": "210 Ampe DrivePaynesville, MN 56362"}, {"name": "Axel Americas, LLC", "phone": "", "email": "apvendor@axelch.com", "contact": "", "bill_address": "516 S. 25th West Ave. Tulsa OK 74127", "ship_address": "516 S. 25th West Ave. Tulsa OK 74127"}, {"name": "Axel Royal, LLC", "phone": "", "email": "ap@axelch.com", "contact": "", "bill_address": "516 S. 25th West Ave. Tulsa OK 74127", "ship_address": "516 S. 25th West Ave. Tulsa OK 74127"}, {"name": "Barrel Accessories & Supply Co. (BASCO)", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 7203 Carol Stream IL 60197", "ship_address": "PO BOX 7203 Carol Stream IL 60197"}, {"name": "Barton Solvents Bettendorf Branch IA", "phone": "", "email": "bt_eft@barsol.com", "contact": "", "bill_address": "204 36th St Bettendorf IA 52722", "ship_address": "204 36th St Bettendorf IA 52722"}, {"name": "Barton Solvents El Dorado Branch, KS", "phone": "", "email": "el_ap@barsol.com", "contact": "", "bill_address": "2601 Pioneer Drive El Dorado KS 67042 USA", "ship_address": "2601 Pioneer Drive El Dorado KS 67042 USA"}, {"name": "Berlin Packaging", "phone": "", "email": "ubpinvoices@BerlinPackaging.com", "contact": "Berlin  Packaging", "bill_address": "525 West Monroe Street14th Floor Chicago IL 60661", "ship_address": "525 West Monroe Street14th Floor Chicago IL 60661"}, {"name": "BNSF Logistics", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Brandt", "phone": "", "email": "", "contact": "Brandt", "bill_address": "2935 S Koke Mill RoadSpringfield IL 62711", "ship_address": "211 west State rte 125Pleasant Plains Il 62677"}, {"name": "Caleb Chemical Inc.", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1263 Frankfort IL", "ship_address": "PO Box 1263 Frankfort IL"}, {"name": "Catalynt Solutions, INC", "phone": "", "email": "", "contact": "", "bill_address": "22817 102nd Place West Edmonds WA 98020", "ship_address": "22817 102nd Place West Edmonds WA 98020"}, {"name": "CDF Corporation", "phone": "", "email": "", "contact": "", "bill_address": "57 Armstrong Rd. Plymouth MA 02360 U.S.", "ship_address": "57 Armstrong Rd. Plymouth MA 02360 U.S."}, {"name": "Celta Chemical, Inc.", "phone": "Phone:(314) 882-0039", "email": "eileen@celtachem.com", "contact": "", "bill_address": "PO Box 124 Grover MO 63040", "ship_address": "PO Box 124 Grover MO 63040"}, {"name": "Centurion Container, Lewisburg TN", "phone": "", "email": "ccowley@enterprizecontainer.com", "contact": "", "bill_address": "1632 Childress Road Lewisburg TN 37091", "ship_address": "671 Garrett Parkway Lewisburg TN 37091"}, {"name": "Ceres Solutions", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 3312802 W State Road 352Boswell, Indiana 47921Attn: Greg Babcock", "ship_address": "PO Box 3312802 W State Road 352Boswell, Indiana 47921Attn: Greg Babcock"}, {"name": "CHEMLINE, INC.", "phone": "", "email": "ap@chemline.net", "contact": "", "bill_address": "5151 Natural Bridge Ave St Louis MO 63115", "ship_address": "5151 Natural Bridge Ave St Louis MO 63115"}, {"name": "Chemorse", "phone": "", "email": "CraigA@chemorse.com", "contact": "", "bill_address": "1596 NE 58th Township Des Moines IA 50313", "ship_address": "1596 NE 58th Township Des Moines IA 50313"}, {"name": "Chemtrade Refinery Services Inc.", "phone": "", "email": "", "contact": "", "bill_address": "5101 West 21st. Street Tulsa OK 74107", "ship_address": "5101 West 21st. Street Tulsa OK 74107"}, {"name": "Chromascape", "phone": "", "email": "", "contact": "Chromascape", "bill_address": "508 Industrial BlvdAtlanta, TX 75551903-796-7127", "ship_address": "508 Industrial BlvdAtlanta, TX 75551903-796-7127"}, {"name": "CHS High Plains", "phone": "", "email": "jacob.weaver@chsinc.com", "contact": "", "bill_address": "Attn: CHS Accounts PayablePO Box 64089 Saint Paul MN 55164-0089 USA", "ship_address": "Attn: CHS Accounts PayablePO Box 64089 Saint Paul MN 55164-0089 USA"}, {"name": "CL Smith", "phone": "", "email": "", "contact": "CL  Smith", "bill_address": "1311 South 39th Street St. Louis MO 63110 Terms: 1% 7 NET 15", "ship_address": "1311 South 39th Street St. Louis MO 63110 Terms: 1% 7 NET 15"}, {"name": "Clean Environmental Management llc", "phone": "", "email": "brice@cleanenvironmentalmanagementllc.com, ghudson@cleanenvironmentalmanagementllc.com", "contact": "", "bill_address": "1184 Warm Winds Drive O'Fallon MO 63366", "ship_address": "1184 Warm Winds Drive O'Fallon MO 63366"}, {"name": "Coastal Bend Containers Inc", "phone": "", "email": "", "contact": "", "bill_address": "4752 County Rd 40 Robstown Texas 78380", "ship_address": "4752 County Rd 40 Robstown Texas 78380"}, {"name": "Coastal Container Services", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Colorbiotics", "phone": "", "email": "BCC-Invoices-USA@mbcc-group.com", "contact": "", "bill_address": "ISS DD - Colorbiotics, LLCPO BOX 696402 San Antonio TX 78269", "ship_address": "ISS DD - Colorbiotics, LLCPO BOX 696402 San Antonio TX 78269"}, {"name": "Cone Solvents Frontier Logistical Services", "phone": "", "email": "", "contact": "", "bill_address": "600 N. Bryant Oklahoma City OK 73117", "ship_address": "600 N. Bryant Oklahoma City OK 73117"}, {"name": "Container Compliance", "phone": "", "email": "dmackall@containercompliance.com", "contact": "", "bill_address": "5151 Denison Avenue Cleveland OH 44102", "ship_address": "5151 Denison Avenue Cleveland OH 44102"}, {"name": "Container Connectionz-Customer", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 517 Isanti MN 55040", "ship_address": "PO Box 517 Isanti MN 55040"}, {"name": "Container Recycling Inc.", "phone": "Phone:(256) 565-4896", "email": "", "contact": "", "bill_address": "Container Recyclers230 Cockrell Ave SW, Decatur AL AL", "ship_address": "Container Recyclers230 Cockrell Ave SW, Decatur AL AL"}, {"name": "Container Services Network, LLC", "phone": "", "email": "MTomlinson@ContainerServicesNetwork.com", "contact": "", "bill_address": "3940 Verde Vista Dr Thousand Oaks CA 91360-2650", "ship_address": "3940 Verde Vista Dr Thousand Oaks CA 91360-2650"}, {"name": "Container Technology  INC", "phone": "", "email": "payables@containertechnology.com", "contact": "", "bill_address": "8550 W Charleston Blvd Suite 102-185 Las Vegas NV 89117", "ship_address": "8550 W Charleston Blvd Suite 102-185 Las Vegas NV 89117"}, {"name": "CORE PLASTECH INTERNATIONAL", "phone": "", "email": "", "contact": "CORE PLASTECH INTERNATIONAL", "bill_address": "15555 La Salle St. South Holland, IL 60473", "ship_address": "15555 La Salle St. South Holland, IL 60473"}, {"name": "Cotey Chemical Co.", "phone": "", "email": "", "contact": "", "bill_address": "P.O.  Box 2039 Lubbock TX 79408", "ship_address": "P.O.  Box 2039 Lubbock TX 79408"}, {"name": "CPU", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Crown Packaging International, Inc.", "phone": "", "email": "boylen@crownpolycon.com", "contact": "Crown Packaging International, Inc.", "bill_address": "8919 Colorado Street Merrillville, IN 46410", "ship_address": "8919 Colorado Street Merrillville, IN 46410"}, {"name": "Cyclone Seed / Chemical", "phone": "", "email": "", "contact": "", "bill_address": "111 Cyclone Ave P.O. Box 618 Harlan Iowa 51537", "ship_address": "111 Cyclone Ave P.O. Box 618 Harlan Iowa 51537"}, {"name": "Delaval Manufacturing", "phone": "", "email": "ap.us.dlm@delaval.com", "contact": "", "bill_address": "11100 Congress Avenue Kansas City MO 64153", "ship_address": "11100 Congress Avenue Kansas City MO 64153"}, {"name": "Diamond Vogel", "phone": "", "email": "", "contact": "", "bill_address": "1110 Albanv Place SE PO Box 380 Orange City IA 51041", "ship_address": "1110 Albanv Place SE PO Box 380 Orange City IA 51041"}, {"name": "Drexel Chemical Co.", "phone": "", "email": "", "contact": "Drexel Chemical Co.", "bill_address": "P.O. Box 13327Memphis, TN 38113-0327", "ship_address": "P.O. Box 13327Memphis, TN 38113-0327"}, {"name": "Drill Green Petro", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Eagle Ford Containers", "phone": "", "email": "", "contact": "", "bill_address": "4836 Fish Lane Beeville TX 78102", "ship_address": "4836 Fish Lane Beeville TX 78102"}, {"name": "Earth Science Laboratories, Inc", "phone": "", "email": "", "contact": "", "bill_address": "903 N. 47th Street Suite 105 Rogers AR 72756", "ship_address": "903 N. 47th Street Suite 105 Rogers AR 72756"}, {"name": "ECO-PAK", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "EcoGreen - Customer", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "EGE Products", "phone": "", "email": "accounting@egebio.com", "contact": "EGE  Products", "bill_address": "PO Box 538450 CR C Minneola KS 67865", "ship_address": "PO Box 538450 CR C Minneola KS 67865"}, {"name": "Enterprize Container", "phone": "", "email": "ccowley@enterprizecontainer.com, jennifer@enterprizecontainer.com", "contact": "Enterprize  Container", "bill_address": "1632 Childress Road Lewisburg TN 37091", "ship_address": "1632 Childress Road Lewisburg TN 37091"}, {"name": "Enviro Containers and Recycling", "phone": "", "email": "", "contact": "", "bill_address": "5904 50th Avenue Innisfail Alberta T4G 1 R7 Canada", "ship_address": "5904 50th Avenue Innisfail Alberta T4G 1 R7 Canada"}, {"name": "Enviro Science Technologies Inc", "phone": "", "email": "est@envirosciencetech.com", "contact": "", "bill_address": "15785 S Keeler Terrace Olathe, KS 66062", "ship_address": "15785 S Keeler Terrace Olathe, KS 66062"}, {"name": "Equity Exchange", "phone": "", "email": "", "contact": "", "bill_address": "4219 S. Main Street Perryton TX 79070", "ship_address": "4219 S. Main Street Perryton TX 79070"}, {"name": "Eureka Chemical Lab", "phone": "", "email": "billing@eureka-inc.com", "contact": "", "bill_address": "7277 S 2nd Line Rd La Porte IN 46350", "ship_address": "7277 S 2nd Line Rd La Porte IN 46350"}, {"name": "Exacto", "phone": "", "email": "", "contact": "Exacto", "bill_address": "200 Old Factory RoadSharon, WI 53585", "ship_address": "200 Old Factory RoadSharon, WI 53585"}, {"name": "Farmchem", "phone": "", "email": "kelly.eckenrod@farmchem.com", "contact": "", "bill_address": "616 Madison St. Floyd IA 50435", "ship_address": "616 Madison St. Floyd IA 50435"}, {"name": "Floratine Products Group", "phone": "", "email": "ashook@floratine.com", "contact": "", "bill_address": "355. E South Street Collierville TN 38017", "ship_address": "355. E South Street Collierville TN 38017"}, {"name": "Florida Coastal Colors, L.L.C.", "phone": "", "email": "jenn@floridacoastalcolors.com", "contact": "", "bill_address": "PO Box 778, Helena AL 35080", "ship_address": "PO Box 778, Helena AL 35080"}, {"name": "Four Seasons Containers LLC", "phone": "Mobile:(432) 853-4398", "email": "ipadilla@permiancontainers.com, mbriggs@permiancontainers.com, lrodriguez@permiancontainers.com", "contact": "", "bill_address": "PO Box 647 Terrell TX 75160", "ship_address": "PO Box 647 Terrell TX 75160"}, {"name": "Frontline Logistics", "phone": "", "email": "", "contact": "", "bill_address": "P.O. BOX 756 South Lyon MI 48178", "ship_address": "P.O. BOX 756 South Lyon MI 48178"}, {"name": "G. Phillips and Sons", "phone": "", "email": "", "contact": "G. Phillips and Sons", "bill_address": "8987 Wildlife LoopSarasota, FL 34238", "ship_address": "8987 Wildlife LoopSarasota, FL 34238"}, {"name": "Gates Engineered Lubricants, LLC", "phone": "", "email": "sara@gatesel.com", "contact": "", "bill_address": "18906 E Industrial Pkwy New Caney TX 77357", "ship_address": "18906 E Industrial Pkwy New Caney TX 77357"}, {"name": "Genesis Custom Chemical Blending", "phone": "", "email": "AP@genesisccb.com", "contact": "", "bill_address": "2708 NE Main St Ennis TX 75119", "ship_address": "2708 NE Main St Ennis TX 75119"}, {"name": "Geo Chemicals", "phone": "Phone:(620) 204-7200", "email": "accountspayable@geo-chemicals.com", "contact": "", "bill_address": "517 E 30th Ave STE E Hutchinson KS 67502", "ship_address": "517 E 30th Ave STE E Hutchinson KS 67502"}, {"name": "Great Plains Container LLC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Hampel Oil Distributors, Inc", "phone": "", "email": "Chad.Hodges@hampeloil.com", "contact": "", "bill_address": "3531 N Ridge Rd, UPPR 2 Wichita KS 67205", "ship_address": "3531 N Ridge Rd, UPPR 2 Wichita KS 67205"}, {"name": "Harris Vacations", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Hartland Lubricants", "phone": "", "email": "brenda.Byrne@HTPEnergy.com, lydia.eddy@hartlandlubes.com", "contact": "", "bill_address": "2455 CommercialDrive Sparta WI 54656", "ship_address": "2455 CommercialDrive Sparta WI 54656"}, {"name": "HB Fuller", "phone": "", "email": "", "contact": "", "bill_address": "4440 Malsbury Road Blue Ash OH 45242", "ship_address": "4440 Malsbury Road Blue Ash OH 45242"}, {"name": "Helena Agri-Enterprises", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Hitachi Energy", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Holganix Inc.", "phone": "", "email": "", "contact": "", "bill_address": "1000 N. 5 Points Road West Chester PA 19380", "ship_address": "1000 N. 5 Points Road West Chester PA 19380"}, {"name": "IBC tote Recycling", "phone": "", "email": "AP@mrawasteexchange.com", "contact": "", "bill_address": "PO Box 2398 Austin TX 78768", "ship_address": "PO Box 2398 Austin TX 78768"}, {"name": "IMACC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Industrial Chemicals Jonesboro.", "phone": "", "email": "", "contact": "", "bill_address": "7536 Jonesboro Road Jonesboro GA 30236", "ship_address": "7536 Jonesboro Road Jonesboro GA 30236"}, {"name": "Industrial Chemicals, Birmingham", "phone": "", "email": "", "contact": "", "bill_address": "1133 Roberts Industrial Drive Birmingham AL 35208", "ship_address": "1133 Roberts Industrial Drive Birmingham AL 35208"}, {"name": "Industrial Container Services", "phone": "", "email": "", "contact": "Industrial Container Services", "bill_address": "", "ship_address": ""}, {"name": "Industrial Container Services - Lakeland", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Industrial Container Services - NC, LLC", "phone": "", "email": "", "contact": "", "bill_address": "1704 Barnes StreetReidsville, NC 27320", "ship_address": "1704 Barnes StreetReidsville, NC 27320"}, {"name": "Industrial Containers of Texas", "phone": "", "email": "", "contact": "Industrial Containers of Texas", "bill_address": "7502 Mesa Dr.Houston, TX 77028", "ship_address": "7502 Mesa Dr.Houston, TX 77028"}, {"name": "Industrial Oils Unlimited", "phone": "", "email": "", "contact": "", "bill_address": "3621 W 5th St Tulsa OK 74127", "ship_address": "3621 W 5th St Tulsa OK 74127"}, {"name": "Integrity Bio-Chem", "phone": "Phone:(817) 402-0444", "email": "cclark@integritybiochem.com", "contact": "", "bill_address": "1100 North Cresson Hwy Cresson TX 76035", "ship_address": "1100 North Cresson Hwy Cresson TX 76035"}, {"name": "Interstate AG Containers", "phone": "", "email": "bbittle@gmail.com", "contact": "Brad  Bittle", "bill_address": "PO BOX 265 BUTTONWILLOW CA 93206", "ship_address": "PO BOX 265 BUTTONWILLOW CA 93206"}, {"name": "IRP Logistics", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 718Highwood IL. 60040", "ship_address": "PO BOX 718Highwood IL. 60040"}, {"name": "KCI-KINGSBURY", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Kemin Nutrisurance", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 70 Des Moines IA 50306", "ship_address": "PO Box 70 Des Moines IA 50306"}, {"name": "Kodiak AI", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Koppers Performance Chemicals,Inc.", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "KSolv", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Landus", "phone": "", "email": "", "contact": "", "bill_address": "1095 T Avenue Boone IA 50036", "ship_address": "1095 T Avenue Boone IA 50036"}, {"name": "LES PLASTIQUES DC INC.", "phone": "", "email": "", "contact": "LES PLASTIQUES DC INC.", "bill_address": "5480-1 Boul. Industriel, Waterloo, QcJ0E 2N0, Canada", "ship_address": "5480-1 Boul. Industriel, Waterloo, QcJ0E 2N0, Canada"}, {"name": "Lionel's Drums, Pallets & Totes, Corp", "phone": "", "email": "", "contact": "", "bill_address": "15334 Southwood Trace Lane Houston TX 77049", "ship_address": "15334 Southwood Trace Lane Houston TX 77049"}, {"name": "Loveland", "phone": "", "email": "", "contact": "Loveland", "bill_address": "P.O. Box 660145Dallas, TX, 75266, US", "ship_address": "P.O. Box 660145Dallas, TX, 75266, US"}, {"name": "M-Con Solutions", "phone": "Phone:(417) 322-6424", "email": "mattc@m-consolutions.com", "contact": "", "bill_address": "2585 S Chapel Drive Springfield MO 65809", "ship_address": "2585 S Chapel Drive Springfield MO 65809"}, {"name": "Master Builders Solutions Construction Systems US, LLC", "phone": "", "email": "", "contact": "", "bill_address": "889 Valley Park DriveShakopee, MN USA 55379", "ship_address": "889 Valley Park DriveShakopee, MN USA 55379"}, {"name": "MBCC Group", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "McKenzie Begin and Associates", "phone": "", "email": "", "contact": "McKenzie Begin and Associates", "bill_address": "Division of K & S McKenzie Ltd.Suite 201-701 Pembina HighwayWinnipeg, MB R3M 2L7", "ship_address": "Division of K & S McKenzie Ltd.Suite 201-701 Pembina HighwayWinnipeg, MB R3M 2L7"}, {"name": "Microsource", "phone": "", "email": "", "contact": "", "bill_address": "7632 Country Road 101 Shakopee MN 55379", "ship_address": "7632 Country Road 101 Shakopee MN 55379"}, {"name": "Mike Harding", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Mitchell Container Services", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Mitten", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Nano Hafa LLC and HaFa Industries Inc.", "phone": "Mobile:308-44-4622", "email": "cbeezley@goithafa.com", "contact": "", "bill_address": "PO Box 3046 Kearney NE 68848", "ship_address": "PO Box 3046 Kearney NE 68848"}, {"name": "Neighbor Distribution, Inc.", "phone": "", "email": "", "contact": "Neighbor Distribution, Inc.", "bill_address": "PO Box 31261St. Louis, MO 63131-0261", "ship_address": "PO Box 31261St. Louis, MO 63131-0261"}, {"name": "NEW VISION TRANSPORTATION SVCS.,INC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Next Day Container", "phone": "", "email": "", "contact": "", "bill_address": "5935 N. 9th Street Delphi IN 46923", "ship_address": "5935 N. 9th Street Delphi IN 46923"}, {"name": "Nutrien Ag Solutions", "phone": "", "email": "", "contact": "Nutrien", "bill_address": "PO Box 660127 Dallas TX 75266", "ship_address": "PO Box 660127 Dallas TX 75266"}, {"name": "Obsidian Chemical Solutions", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Odom Industries", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Omni Polymers Intl Corp.", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Oro Agri - Rovensa Next", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Pack Depot Container", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1270 Fairhope AL 36532", "ship_address": "PO Box 1270 Fairhope AL 36532"}, {"name": "Pencco, Inc.", "phone": "Phone:(979) 885-0005", "email": "AP@pencco.com", "contact": "", "bill_address": "P.O. Box 600 San Felipe TX 77473", "ship_address": "P.O. Box 600 San Felipe TX 77473"}, {"name": "Permian Basin Container", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "PERRYTON EQUITY EXCHANGE", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 889, 4219 S MAIN PERRYTON TX 79070", "ship_address": "PO BOX 889, 4219 S MAIN PERRYTON TX 79070"}, {"name": "phoenix flooring", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Pinnacle Resources Inc.", "phone": "", "email": "", "contact": "", "bill_address": "5504 Jefferson Pkwy. Pine Bluff AR 71602", "ship_address": "5504 Jefferson Pkwy. Pine Bluff AR 71602"}, {"name": "Pipeline Packaging", "phone": "", "email": "invoices_receiving@pipelinepackaging.com", "contact": "", "bill_address": "100 Executive Parkway Hudson OH 44236 USA", "ship_address": "100 Executive Parkway Hudson OH 44236 USA"}, {"name": "Plant Nuco", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Plasmine Technology", "phone": "", "email": "", "contact": "", "bill_address": "3298-35 Summit Blvd Pensecola FL 32503", "ship_address": "3298-35 Summit Blvd Pensecola FL 32503"}, {"name": "Platte Chemical Co", "phone": "", "email": "LPIAP@nutrien.com", "contact": "pla", "bill_address": "P.O. Box 660145 Dallas TX 75266", "ship_address": "P.O. Box 660145 Dallas TX 75266"}, {"name": "Precision Dynamics, INC", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1595 Burleson TX 76097", "ship_address": "PO Box 1595 Burleson TX 76097"}, {"name": "PRECISION IBC, INC", "phone": "", "email": "terra@precisionibc.com", "contact": "", "bill_address": "8054 McGowin Dr Fairhope AL 36532", "ship_address": "8054 McGowin Dr Fairhope AL 36532"}, {"name": "Presley Enterprises", "phone": "", "email": "", "contact": "", "bill_address": "3181 State Highway BB Sikeston MO 63801", "ship_address": "3181 State Highway BB Sikeston MO 63801"}, {"name": "PRO CO-OP", "phone": "", "email": "", "contact": "", "bill_address": "SCOBEY MT", "ship_address": "SCOBEY MT"}, {"name": "ProTank", "phone": "", "email": "", "contact": "", "bill_address": "8971 Yahweh Dr. Olive Branch MS 38654", "ship_address": "8971 Yahweh Dr. Olive Branch MS 38654"}, {"name": "Quanta Containers, LLC", "phone": "", "email": "", "contact": "", "bill_address": "15801 Huron St. Taylor MI 48180", "ship_address": "15801 Huron St. Taylor MI 48180"}, {"name": "Ralco Nutrition", "phone": "", "email": "", "contact": "", "bill_address": "100 W. College Dr. Suite 200 Marshall MN 56258", "ship_address": "100 W. College Dr. Suite 200 Marshall MN 56258"}, {"name": "Research Solutions", "phone": "", "email": "", "contact": "", "bill_address": "100 Tony Holmes Drive Pelham AL 35124", "ship_address": "100 Tony Holmes Drive Pelham AL 35124"}, {"name": "Responsible Container", "phone": "", "email": "", "contact": "Responsible  Container", "bill_address": "5300 Hall St. St. Louis. MO, 63147", "ship_address": "5300 Hall St. St. Louis. MO, 63147"}, {"name": "Rivas Logistics LLC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Rosen's INC", "phone": "", "email": "rosensap@riw2000.com", "contact": "", "bill_address": "1120 Lake Avenue PO Box 933 Fairmont MN 56031", "ship_address": "1120 Lake Avenue PO Box 933 Fairmont MN 56031"}, {"name": "Rosen's Inc.", "phone": "", "email": "", "contact": "", "bill_address": "1120 Lake Avenue  PO Box 933 Fairmont MN 56031", "ship_address": "1120 Lake Avenue  PO Box 933 Fairmont MN 56031"}, {"name": "RRG", "phone": "", "email": "", "contact": "RRG", "bill_address": "", "ship_address": ""}, {"name": "Shotwell Hydrogenics", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Sigma Recycling Inc.", "phone": "", "email": "", "contact": "Sigma Recycling Inc.", "bill_address": "5675 JIMMY CARTER BLVDSUITE 598,NORCROSS, GA - 30071", "ship_address": "5675 JIMMY CARTER BLVDSUITE 598,NORCROSS, GA - 30071"}, {"name": "Sika Corporation", "phone": "", "email": "AccountsPayable@us.sika.com", "contact": "", "bill_address": "PO Box 710 Lyndhurst NJ 07071-0710", "ship_address": "PO Box 710 Lyndhurst NJ 07071-0710"}, {"name": "Simplot", "phone": "", "email": "", "contact": "Simplot", "bill_address": "1702 Levelland Hwy, Brownfield, TX 79316Attn: Dottie Mayesdottie.mayes@simplot.com806.456.7210", "ship_address": "1702 Levelland Hwy, Brownfield, TX 79316Attn: Dottie Mayesdottie.mayes@simplot.com806.456.7210"}, {"name": "Skyland Grain", "phone": "", "email": "", "contact": "Skyland  Grain", "bill_address": "PO BOX 129BUSHLAND TX 79012", "ship_address": "PO BOX 129BUSHLAND TX 79012"}, {"name": "SNRG Resources, INC.", "phone": "", "email": "", "contact": "SNRG Resources, INC.", "bill_address": "PO Box 2151 Foley, AL 36536", "ship_address": "PO Box 2151 Foley, AL 36536"}, {"name": "Sound Resource Solutions, LLC", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Southern Container", "phone": "", "email": "", "contact": "Southern  Container", "bill_address": "340 Howell Drive Dalton, GA 30721", "ship_address": "340 Howell Drive Dalton, GA 30721"}, {"name": "SPADECHEM LLC", "phone": "", "email": "rushilshah@spadechem.com", "contact": "", "bill_address": "80 MARTIN LN, ELK GROVE VILLAGE IL 60007", "ship_address": "80 MARTIN LN, ELK GROVE VILLAGE IL 60007"}, {"name": "SpecChem", "phone": "", "email": "invoice@specchem.com", "contact": "", "bill_address": "1511 Baltimore Avenue, Ste. 600 Kansas City MO 64108", "ship_address": "1511 Baltimore Avenue, Ste. 600 Kansas City MO 64108"}, {"name": "Specialty Adhesives & Coatings", "phone": "", "email": "", "contact": "Specialty Adhesives & Coatings", "bill_address": "PO BOX 18445Memphis, TN 38181-0445", "ship_address": "PO BOX 18445Memphis, TN 38181-0445"}, {"name": "Specialty Ag Formulations", "phone": "", "email": "", "contact": "", "bill_address": "1658 Mission Ave. Aurora NE 68818", "ship_address": "1658 Mission Ave. Aurora NE 68818"}, {"name": "Spectrum Adhesives", "phone": "", "email": "", "contact": "", "bill_address": "5611 Universal Drive Memphis TN 38118", "ship_address": "5611 Universal Drive Memphis TN 38118"}, {"name": "Star of the West Milling Company", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Steve Strba Consulting Inc", "phone": "", "email": "strbaconsulting@gmail.com", "contact": "", "bill_address": "27 Paisley Avenue North Hamilton Ontario L8S 4G5 Canada", "ship_address": "27 Paisley Avenue North Hamilton Ontario L8S 4G5 Canada"}, {"name": "Steve Strba Consulting INC.", "phone": "", "email": "", "contact": "", "bill_address": "27 Paisley Avenue North Hamilton, ON   Canada", "ship_address": "27 Paisley Avenue North Hamilton, ON   Canada"}, {"name": "Superior Tote Solutions", "phone": "", "email": "", "contact": "Superior Tote Solutions", "bill_address": "401 North Main StreetSummitville, IN 46070", "ship_address": "401 North Main StreetSummitville, IN 46070"}, {"name": "TBK One LLC", "phone": "Phone:(940) 577-1766", "email": "accounting@tbk-one.com", "contact": "", "bill_address": "11425 Mathis Ave STE 507 Farmers Branch TX 75234 USA", "ship_address": "11425 Mathis Ave STE 507 Farmers Branch TX 75234 USA"}, {"name": "Team Laboratory Chemical, LLC", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 1467 Detroit Lakes MN 56502", "ship_address": "PO Box 1467 Detroit Lakes MN 56502"}, {"name": "TED LEVINE DRUM COMPANY", "phone": "Phone:(626) 579-1084", "email": "david@tldrumco.com", "contact": "", "bill_address": "1817 CHICO AVENUE SO. EL MONTE CA 91733", "ship_address": "1817 CHICO AVENUE SO. EL MONTE CA 91733"}, {"name": "Texas Tank Works, Terrell", "phone": "", "email": "", "contact": "", "bill_address": "PO BOX 918 Terrell TX 75160", "ship_address": "PO BOX 918 Terrell TX 75160"}, {"name": "Texas Tote Works-Odessa", "phone": "", "email": "mbriggs@permiancontainers.com", "contact": "", "bill_address": "16691 Basin St Odessa TX 79763", "ship_address": "16691 Basin St Odessa TX 79763"}, {"name": "The Andersons", "phone": "", "email": "", "contact": "", "bill_address": "PO Box 119 1947 Briarfield Blvd. Maumee OH 43537", "ship_address": "PO Box 119 1947 Briarfield Blvd. Maumee OH 43537"}, {"name": "The Cary Company", "phone": "", "email": "", "contact": "", "bill_address": "1195 W. Fullerton Ave. Addison IL 60101", "ship_address": "1195 W. Fullerton Ave. Addison IL 60101"}, {"name": "The Way, Inc", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Tote Detailing", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Transchemical", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Tri-Rinse", "phone": "", "email": "", "contact": "", "bill_address": "1402 S. 2nd Street St. Louis MO 63104", "ship_address": "1402 S. 2nd Street St. Louis MO 63104"}, {"name": "Unique Environmental Service Inc.", "phone": "", "email": "", "contact": "Unique Environmental Service Inc.", "bill_address": "935 Sandy Beach Road Pickering, ON L1W 1Z5", "ship_address": "935 Sandy Beach Road Pickering, ON L1W 1Z5"}, {"name": "Vallen Belmont, NC", "phone": "", "email": "", "contact": "Vallen Belmont, NC", "bill_address": "2100 The Oaks ParkwyBelmont, NC 28012", "ship_address": "2100 The Oaks ParkwyBelmont, NC 28012"}, {"name": "Vantage Specialties, Inc.", "phone": "", "email": "", "contact": "Vantage Specialties, Inc.", "bill_address": "4650 South Racine AveChicago, IL 60609", "ship_address": "4650 South Racine AveChicago, IL 60609"}, {"name": "VRC Technologies, Inc.", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Water Tech", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Webb Chemical", "phone": "", "email": "", "contact": "", "bill_address": "", "ship_address": ""}, {"name": "Wells Ag Supply", "phone": "", "email": "", "contact": "Wells Ag Supply", "bill_address": "55560 150th AvenueFonda, IA 50540", "ship_address": "55560 150th AvenueFonda, IA 50540"}, {"name": "West Drum & Container", "phone": "Phone:(903) 643-7001", "email": "twest@westdrum.com", "contact": "", "bill_address": "5124 Estes PKWY Longview TX 75603", "ship_address": "5124 Estes PKWY Longview TX 75603"}, {"name": "Wilbur Elis Dalhart TX", "phone": "", "email": "PDominguez@wilburellis.com", "contact": "", "bill_address": "3325 Spur 24 Dalhart TX 79022", "ship_address": "3325 Spur 24 Dalhart TX 79022"}, {"name": "Wilbur Ellis", "phone": "", "email": "", "contact": "", "bill_address": "265 IH-35 South Devine TX 78016", "ship_address": ""}, {"name": "Winfield United", "phone": "", "email": "", "contact": "Winfield  United", "bill_address": "1834 West Point Road West Point, Iowa 52656", "ship_address": "1834 West Point Road West Point, Iowa 52656"}];
 
 // -- VENDOR DATA ------------------------------------------------------------
 const VENDORS = {
@@ -742,17 +746,17 @@ const VENDORS = {
   core_waterloo:{name:"MPH United / Core -- Waterloo, IA",address:"1575 W Big Rock\nWaterloo, IA 50703",contact:"Shaun Randle",phone:"832-773-0732",email:"brijesh.singh@coreplastech.com; logistics-ia@coreplastech.com; orders@mphunited.com",dockHours:"First come, first serve. 7:00am-3:00pm, be there by 2:00pm.",dockContact:"Shaun Randle 832-773-0732\nShaun's email: logistics-ia@coreplastech.com\nFirst come, first serve.  7:00am – 3:00pm, but be there by 2:00pm",notes:"New Units: 135, 275, 330 gal IBCs; 55 gal tight head drum.",leadContact:"Christina Bayne / Keith",products:[{desc:"IBC 135 Gal -- New | Valve-BV-AG QD VITON | Lid-6\" BLACK EPDM 2\" AG BUNG (NO CS) | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10135GNXR00003FG",price:""},{desc:"IBC 275 Gal -- New | Valve-BV-AG QD VITON | Lid-6\" BLACK EPDM 2\" AG BUNG (NO CS) | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10275GNX00023FG",price:""},{desc:"IBC 275 Gal -- New | Valve-BV QD VITON | Lid-6\" BLACK EPDM 2\" VENTED MICROPOROUS BUNG YELLOW CS | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10275GNX00024FG",price:""},{desc:"IBC 330 Gal -- New | Valve-BV-AG QD VITON | Lid-6\" BLACK EPDM 2\" AG BUNG (NO CS) | Placards(2)-METAL FRONT AND BACK | Pallet-COMPOSITE OR STEEL",pn:"10330GNX00000FG",price:""},{desc:"55 Gal Tight Head Drum -- New",pn:"",price:""}]},
   core_calhoun:{name:"MPH United / Core -- Calhoun, GA",address:"185 East Rus Drive\nCalhoun, GA 30701",contact:"Raj Das",phone:"832-837-5104",email:"brijesh.singh@coreplastech.com; orders@mphunited.com",dockHours:"S/R Hours: 7am-3pm, first come/first serve.",dockContact:"Raj Das 832-837-5104 raj@coreplastech.com",notes:"275 & 330 gal Bottles & IBCs, poly drums.",leadContact:"Keith Ferrell",products:[{desc:"IBC 275 Gal -- New",pn:"",price:""},{desc:"IBC 330 Gal -- New",pn:"",price:""},{desc:"Poly Drum -- New",pn:"",price:""}]},
   alliance_greenwood:{name:"MPH United / Alliance Container -- Greenwood, IN",address:"2615 Endress Place\nGreenwood, IN 46143",contact:"Mike McGuire",phone:"765-243-1936",email:"jessica@ac-ibc.com; orders@mphunited.com",dockHours:"8:00am-2:00pm. Have MPH Load# for reference. Jessica Redden sends signed BOLs.",dockContact:"Mike McGuire michael@ac-ibc.com  765-243-1936\nDock Times: 8:00am – 2:00pm",notes:"IBC Bottles only 275 & 330. Own trucks within 100 miles. Outside local = Frontline. Under same roof as STS rebottle.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC Bottle 275 Gal -- New",price:""},{desc:"IBC Bottle 330 Gal -- New",price:""}]},
-  alliance_hillsboro:{name:"MPH United / Alliance Container Texas -- Hillsboro, TX",address:"251 Industrial Loop\nHillsboro, TX 76645",contact:"Isabel Martinez",phone:"832-721-3423",email:"iguevara@alliance-ctx.com; dharding@gphillipsandsons.com; david@mphunited.com; tharding@gphillipsandsons.com; aibarra@permiancontainers.com; cmontano@permiancontainers.com; mibarra@achievedholdings.com; orders@mphunited.com",dockHours:"8:30-10:00am & 12:30-4:00pm. (!) CLOSED 11am-12pm for lunch. Email for dock appointment.",dockContact:"Isabel Martinez iguevara@alliance-ctx.com 832-721-3423\nDock Times: 8:30AM-10:00AM & 12:30PM-4:00PM, 11:00-12:00 Closed for lunch",notes:"IBC Bottles only 275 & 330. Building split: Front = Alliance new bottles; Back = United Container Group rebottle.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",price:""},{desc:"IBC Bottle 330 Gal -- New",price:""}]},
-  fivestar_bristow:{name:"MPH United / 5 Star Industrial Containers -- Bristow, OK",address:"502 Industrial Road\nBristow, OK 74010",contact:"Luis Rodriguez",phone:"469-543-8284",email:"lrodriguez@permiancontainers.com; aleos@achievedholdings.com; aibarra@permiancontainers.com; orders@mphunited.com",dockHours:"Call for dock times. Has own trucks.",dockContact:"Luis Rodriguez lrodriguez@permiancontainers.com Cell 469-543-8284",notes:"Washout & Rebottle 275 & 330. Arnaldo Sr plant. Keeps MPH stock (AgChem bottles, drums, 5 gal jerrycans).",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
+  alliance_hillsboro:{name:"MPH United / UCG (United Container Group) - Bottles -- Hillsboro, TX",address:"251 Industrial Loop\nHillsboro, TX 76645",contact:"Isabel Martinez",phone:"832-721-3423",email:"iguevara@alliance-ctx.com; ajibarra@unitedcontainergroup.com; orders@mphunited.com",dockHours:"8:30-10:00am & 12:30-4:00pm. (!) CLOSED 11am-12pm for lunch. Email for dock appointment.",dockContact:"Isabel Martinez iguevara@alliance-ctx.com 832-721-3423\nDock Times: 8:30AM-10:00AM & 12:30PM-4:00PM, 11:00-12:00 Closed for lunch",notes:"IBC Bottles only 275 & 330. Building split: Front = UCG new bottles; Back = UCG rebottle/IBCS.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",price:""},{desc:"IBC Bottle 330 Gal -- New",price:""}]},
+  fivestar_bristow:{name:"MPH United / 5 Star Industrial Containers -- Bristow, OK",address:"502 Industrial Road\nBristow, OK 74010",contact:"Luis Rodriguez",phone:"469-543-8284",email:"lrodriguez@permiancontainers.com; aleos@achievedholdings.com; aibarra@permiancontainers.com; yramirez@unitedcontainergroup.com; orders@mphunited.com",dockHours:"Call for dock times. Has own trucks.",dockContact:"Luis Rodriguez lrodriguez@permiancontainers.com Cell 469-543-8284",notes:"Washout & Rebottle 275 & 330. Arnaldo Sr plant. Keeps MPH stock (AgChem bottles, drums, 5 gal jerrycans).",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   sec_cleveland:{name:"MPH United / SEC SouthEast Container -- Cleveland, MS",address:"1002 Charlie Capps Road\nCleveland, MS 38732",contact:"Luis Rodriguez / Juan (plant lead)",phone:"469-543-8284",email:"lrodriguez@permiancontainers.com; aleos@achievedholdings.com; aibarra@permiancontainers.com; orders@mphunited.com",dockHours:"First come, first serve: 7am-12pm and 1pm-4pm. Lunch 12pm-1pm.",dockContact:"Luis Rodriguez lrodriguez@permiancontainers.com Cell 469-543-8284\nFirst come, first serve: 7am-12noon and 1pm-4pm (Lunch 12noon-1:00pm)",notes:"Washout & Rebottle 275 gal. New plant May 2025. Keeps MPH bottle stock. (!) Correct zip is 38732 (not 38759).",leadContact:"Christina Bayne 251-978-0563",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""}]},
   gpc_gardencity:{name:"MPH United / GPC Great Plains Container -- Garden City, KS",address:"2203 Humphrey Road\nGarden City, KS 67846",contact:"Luis Rodriguez",phone:"469-543-8284",email:"LRodriguez@greatplainscontainers.com; ALeos@greatplainscontainers.com; aibarra@permiancontainers.com; orders@mphunited.com; dharding@gphillipsandsons.com",dockHours:"S/R Hours: 7am-4pm.",dockContact:"Luis Rodriguez lrodriguez@greatplainscontainers.com Cell 469-543-8284\nS/R Hours 7am-4pm",notes:"Washout & Rebottle 135, 275, 330 gal. New plant Feb 2025. Keeps MPH stock (bottle and new 135g IBCs).",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 135 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""}]},
-  sts_greenwood:{name:"MPH United / STS Superior Tote Solutions -- Greenwood, IN",address:"2615 Endress Place\nGreenwood, IN 46143",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; orders@mphunited.com",dockHours:"8:00am-2:00pm.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2\nDock Times: 8:00am – 2:00pm",notes:"Rebottle 275 & 330. Under same roof as Alliance. Own trucks within 100 miles. Outside local = Frontline.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""}]},
-  ucg_hillsboro:{name:"MPH United / United Container Group -- Hillsboro, TX",address:"251 Industrial Loop, Building B\nHillsboro, TX 76645",contact:"AJ Ibarra",phone:"281-515-2104",email:"ajibarra@permiancontainers.com; aibarra@permiancontainers.com; orders@mphunited.com",dockHours:"By appointment. 8:00am-4:00pm. Lunch 12pm-1pm.",dockContact:"AJ Ibarra ajibarra@permiancontainers.com 281-515-2104\nDock hours: Schedule an appointment / 8:00am to 4:00pm (lunch 12:00noon – 1:00pm)",notes:"Washout & Rebottle 275 & 330. Arnaldo Sr plant. Back side of building. Has own trucks. When ordering rebottles MPH orders bottles from Alliance.",leadContact:"Christina Bayne 251-978-0563",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
+  sts_greenwood:{name:"MPH United / STS Superior Tote Solutions -- Greenwood, IN",address:"2615 Endress Place\nGreenwood, IN 46143",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; orders@stsindiana.com; orders@mphunited.com",dockHours:"8:00am-2:00pm.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2\nDock Times: 8:00am – 2:00pm",notes:"Rebottle 275 & 330. Under same roof as Alliance. Own trucks within 100 miles. Outside local = Frontline.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""}]},
+  ucg_hillsboro:{name:"MPH United / UCG (United Container Group) - IBCS -- Hillsboro, TX",address:"251 Industrial Loop, Building B\nHillsboro, TX 76645",contact:"AJ Ibarra",phone:"281-515-2104",email:"ajibarra@unitedcontainergroup.com; orders@mphunited.com",dockHours:"By appointment. 8:00am-4:00pm. Lunch 12pm-1pm.",dockContact:"AJ Ibarra ajibarra@unitedcontainergroup.com 281-515-2104\nDock hours: Schedule an appointment / 8:00am to 4:00pm (lunch 12:00noon – 1:00pm)",notes:"Washout & Rebottle 275 & 330. Arnaldo Sr plant. Back side of building. Has own trucks. When ordering rebottles MPH orders bottles from UCG Bottles (front of building).",leadContact:"Christina Bayne 251-978-0563",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   ttw_odessa:{name:"MPH United / TTW Texas Tote Works -- Odessa, TX",address:"16691 W Basin Street\nOdessa, TX 79763",contact:"Carlos Montano",phone:"214-601-7576",email:"cmontano@permiancontainers.com; aibarra@achievedholdings.com; angela@permiancontainers.com; lrodriguez@permiancontainers.com; orders@mphunited.com",dockHours:"Call for dock times. CC Carlos on all emails to Angela Madrazo angela@permiancontainers.com 432-703-7434.",dockContact:"Carlos Montano cmontano@unitedcontainergroup.com Ph. 214-601-7576",notes:"Washout & Rebottle 275 & 330. New plant 1/2/25. Arnaldo Sr plant.",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   tld_socal:{name:"MPH United / TLD Ted Levine Drum Co -- South El Monte, CA",address:"1817 Chico Avenue\nSouth El Monte, CA 91733",contact:"Kim Jackson",phone:"626-579-1084 ext. 123",email:"david@tldrumco.com; kim@tldrumco.com; orders@mphunited.com",dockHours:"M-F 7am-2pm. Frontline needs appt from Kim Jackson.",dockContact:"Kim Jackson kim@tldrumco.com 626-579-1084 ext. 123\nShipping Hours: M-F / 7am-2pm",notes:"Rebottle & Washout 135/275/330; 275 rebottle. Steel & poly drum washout. Not a partner -- vendor only. Only customer is DeLaval 275s.",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC Washout",price:""},{desc:"Steel/Poly Drum -- Washout",price:""}]},
   rrg_stanwood:{name:"MPH United / RRG Rural Recycling & Grinding -- Stanwood, IA",address:"101 Forest Street\nStanwood, IA 52337",contact:"Michelle McCall",phone:"319.360.4571",email:"michelle@mphunited.com; lmccall@recyclinggrinding.com; orders@mphunited.com",dockHours:"",dockContact:"Michelle McCall admin@recyclinggrinding.com 319.360.4571",notes:"Rebottle 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""}]},
   clean_stlouis:{name:"MPH United / Clean Environmental -- St. Louis, MO",address:"4500 Fyler Ave\nSt. Louis, MO 63116",contact:"Tommy Hudson / Breana Rice",phone:"513-652-1903 / 314-775-1779",email:"brice@cleanenvironmentalmanagementllc.com; ghudson@cleanenvironmentalmanagementllc.com; orders@mphunited.com",dockHours:"(!) EMAIL BREANA (not Tommy). Mon-Thurs 6:30am-1:30pm. Friday by approval only 6:30-10:30am. Warehouse UNMANNED as of Aug 2025.",dockContact:"Tommy Hudson 513-652-1903",notes:"Washout & Rebottle 275 & 330, 55 gal TH poly drums. Secondary unmanned location: 3211 S Kingshighway Blvd -- must call before delivery.",leadContact:"Suzanne Ridenhour 251.413.6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"55 Gal TH Poly Drum -- Washout",price:""}]},
-  sts_summitville:{name:"MPH United / STS Superior Tote Solutions -- Summitville, IN",address:"401 North Main Street\nSummitville, IN 46070",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; bailey@stsindiana.com; orders@mphunited.com",dockHours:"Own trucks within 100 miles.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2",notes:"Washout 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Washout",price:""}]},
+  sts_summitville:{name:"MPH United / STS Superior Tote Solutions -- Summitville, IN",address:"401 North Main Street\nSummitville, IN 46070",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; bailey@stsindiana.com; orders@stsindiana.com; orders@mphunited.com",dockHours:"Own trucks within 100 miles.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2",notes:"Washout 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Washout",price:""}]},
   centurion_lewisburg:{name:"MPH United / Centurion -- Lewisburg, TN",address:"671 Garrett Parkway\nLewisburg, TN 37091",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY.",leadContact:"Suzanne Ridenour 251-413-6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   centurion_memphis:{name:"MPH United / Centurion -- Memphis, TN",address:"285 Trigg Avenue\nMemphis, TN 38106",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY. Typically uses Core Waterloo bottles (work better in cages than Alliance).",leadContact:"Suzanne Ridenour 251.413.6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   coastal_alvin:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com; jack@mphunited.com; david@mphunited.com; mike@mphunited.com",dockHours:"Call Tommy Spalding",dockContact:"APPT REQUIRED - Call ASAP  Tom Spalding (903) 275-6213 tommy@ccontainertx.com",notes:"Drum recycling only.",leadContact:"Matt Cozik 517.230.9405",products:[{desc:"Drum Recycle Service",price:""}]},
@@ -764,8 +768,9 @@ const VENDORS = {
   containerconnectionz_wayzata:{name:"Container Connectionz",address:"1250 Wayzata Blvd E Unit 1752\nWayzata, MN 55391-1951",contact:"Brian Bilyeu – 612-919-0307",phone:"612-919-0307",email:"brianb@containerconnectionz.com; orders@containerconnectionz.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   basco:{name:"Basco",address:"",contact:"Sheila M. O'Neil",phone:"",email:"sheilao@bascousa.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"Basco Products",price:""}]},
   cpp_lakewales:{name:"CPP",address:"PO Box 3752\nLake Wales, FL 33859",contact:"Gary Yarbrough – (863) 638-6335",phone:"(863) 638-6335",email:"so@cpp-usa.com; david@cpp-usa.com; gary@cpp-usa.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"",price:""}]},
-  advatech_houston:{name:"MPH United / Advatech Industries",address:"9159 Wallisville Road\nHouston TX, 77029",contact:"Darshan Advatech - 713-282-4182",phone:"713-282-4182",email:"darshan@advatechindustries.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
-  ecog_houston:{name:"MPH United / Eco Green -- Houston, TX",address:"12221 N. Houston Rosslyn Road\nBLDG K\nHouston, TX 77086",contact:"Sam Amir",phone:"832.228.3532",email:"sam@ecogreenpkg.com; orders@mphunited.com",dockHours:"Have MPH PO# for reference.",dockContact:"Sam Amir sam@ecogreenpkg.com 832.228.3532",notes:"IBC Bottles 275 & 330 Only.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",pn:"",price:""},{desc:"IBC Bottle 330 Gal -- New",pn:"",price:""}]}
+  advatech_houston:{name:"MPH United / Advatech Industries",address:"9159 Wallisville Road\nHouston TX, 77029",contact:"Darshan Advatech - 713-282-4182",phone:"713-282-4182",email:"darshan@advatechindustries.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
+  ecog_houston:{name:"MPH United / Eco Green -- Houston, TX",address:"12221 N. Houston Rosslyn Road\nBLDG K\nHouston, TX 77086",contact:"Sam Amir",phone:"832.228.3532",email:"sam@ecogreenpkg.com; orders@mphunited.com",dockHours:"Have MPH PO# for reference.",dockContact:"Sam Amir sam@ecogreenpkg.com 832.228.3532",notes:"IBC Bottles 275 & 330 Only.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",pn:"",price:""},{desc:"IBC Bottle 330 Gal -- New",pn:"",price:""}]},
+  kp_rockyriver:{name:"MPH United / KP Pallet & Packaging",address:"4650 Lakeside Avenue\nCleveland, OH 44114",contact:"Melanie Miller",phone:"(216) 906-3322",email:"mel@kppallet.com; orders@mphunited.com",dockHours:"7:00am – 3:00pm Monday–Friday",dockContact:"Melanie Miller mel@kppallet.com (216) 906-3322",notes:"Carrier contact only for dock times.",leadContact:"",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]}
 };
 
 // -- VENDOR GREETINGS -------------------------------------------------------
@@ -777,13 +782,14 @@ const VENDOR_GREETINGS = {
   "MPH United / Core -- Waterloo, IA":                        "Brijesh",
   "MPH United / Core -- Calhoun, GA":                         "Brijesh",
   "MPH United / Alliance Container -- Greenwood, IN":         "Jessica",
-  "MPH United / Alliance Container Texas -- Hillsboro, TX":   "Alliance Container Texas",
+  "MPH United / UCG (United Container Group) - Bottles -- Hillsboro, TX":   "United Container",
   "MPH United / Eco Green -- Houston, TX":                    "Sam",
+  "MPH United / KP Pallet & Packaging":                      "Melanie",
   "MPH United / 5 Star Industrial Containers -- Bristow, OK": "5 Star",
   "MPH United / SEC SouthEast Container -- Cleveland, MS":    "SEC",
   "MPH United / GPC Great Plains Container -- Garden City, KS": "GPC",
   "MPH United / STS Superior Tote Solutions -- Greenwood, IN":  "Kelly",
-  "MPH United / United Container Group -- Hillsboro, TX":     "AJ",
+  "MPH United / UCG (United Container Group) - IBCS -- Hillsboro, TX":     "United Container",
   "MPH United / TTW Texas Tote Works -- Odessa, TX":          "TTW",
   "MPH United / TLD Ted Levine Drum Co -- South El Monte, CA":"David",
   "MPH United / RRG Rural Recycling & Grinding -- Stanwood, IA": "Michelle",
@@ -800,6 +806,8 @@ const VENDOR_GREETINGS = {
   "Container Connectionz":                                    "Brian",
   "Basco":                                                    "Sheila",
   "MPH United / Advatech Industries":                         "Darshan",
+  "MPH United / Eco Green -- Houston, TX":                    "Sam",
+  "MPH United / KP Pallet & Packaging":                      "Melanie",
 };
 function getVendorGreeting(vendor) {
   if (!vendor || !vendor.name) return '';
@@ -813,9 +821,10 @@ let mphPONum = '';
 let lastLoadedMphPO = '';
 let lastMultiPORawOrders = [];
 let lastMultiPOPoNums = [];
-let lastMultiPOMode = 'multi'; // 'multi' or 'splitMulti'
+let lastMultiPOMode = 'multi'; // 'multi' | 'splitMulti' | 'splitRegular' | 'multiShip'
 let pendingPONum = null; // set before generatePO() to override the auto-generated PO number
 let splitLineOverrides = null; // [{poNum, custPO}] per line for Split Load/Multiple PO Numbers; cleared after use
+let multiShipLegs = null; // [{poNum, customer, customerPO, shipTo, shipDate, apptTime, salesOrder, notes, isCoastal, lines}] for Multi Ship-To Split; per-leg poNum slot future-proofs for multi-PO# while v1 uses a single shared PO#
 let selectedCustomer = null;
 let currentOrderIsCoastal = false;
 let dropdownTimer = null;
@@ -893,7 +902,17 @@ function selectCustomer(name) {
 // -- VENDOR LOAD -----------------------------------------------------------
 const CORE_VENDOR_KEYS = ['core_houston','core_nashua','core_shreveport','core_southholland','core_waterloo','core_calhoun'];
 
+// Vendors that should default to Blind Shipment when selected. User can still uncheck.
+// To add/remove: edit this list, no other changes needed.
+const BLIND_VENDOR_KEYS = [
+  'core_houston','core_nashua','core_shreveport','core_southholland','core_waterloo','core_calhoun',
+  'advatech_houston',
+  'ecog_houston',
+  'tld_socal'
+];
+
 function isCore(key) { return CORE_VENDOR_KEYS.includes(key); }
+function isBlindByDefault(key) { return BLIND_VENDOR_KEYS.includes(key); }
 
 function setPNVisible(show) {
   document.querySelectorAll('.pn-col').forEach(el => el.classList.toggle('visible', show));
@@ -949,10 +968,12 @@ function makeRowHTML(desc, pn, price, showPN) {
 
 function loadVendor() {
   const key = document.getElementById('vendorSelect').value;
+  const blindHint = document.getElementById('blindAutoHint');
   if (!key || !VENDORS[key]) {
     document.getElementById('vendorCard').classList.remove('active');
     const cw = document.getElementById('chipsWrap'); if (cw) cw.style.display = 'none';
     setPNVisible(false);
+    if (blindHint) blindHint.style.display = 'none';
     return;
   }
   const v = VENDORS[key];
@@ -967,6 +988,18 @@ function loadVendor() {
   const coreVendor = isCore(key);
   setPNVisible(coreVendor);
   buildChips(v.products, key);
+
+  // Auto-blind shipment for vendors in BLIND_VENDOR_KEYS.
+  // Soft default: re-applies on every vendor change. User can still uncheck after.
+  const blindCheckbox = document.getElementById('isBlindShipment');
+  if (blindCheckbox) {
+    if (isBlindByDefault(key)) {
+      blindCheckbox.checked = true;
+      if (blindHint) blindHint.style.display = 'inline';
+    } else {
+      if (blindHint) blindHint.style.display = 'none';
+    }
+  }
 
   // Reset line body to one clean empty row
   const body = document.getElementById('lineBody');
@@ -992,14 +1025,34 @@ function getLines() {
   return Array.from(document.querySelectorAll('#lineBody tr')).map(r => ({
     desc: r.querySelector('.li-desc').value || 'IBC Product',
     pn: r.querySelector('.li-pn') ? r.querySelector('.li-pn').value.trim() : '',
-    qty: parseFloat(r.querySelector('.li-qty').value) || 0,
+    qty: parseQty(r.querySelector('.li-qty').value),
     price: parseFloat(r.querySelector('.li-price').value) || 0,
     sell: parseFloat(r.querySelector('.li-sell') ? r.querySelector('.li-sell').value : 0) || 0
   })).filter(r => r.desc);
 }
 
 // -- HELPERS ---------------------------------------------------------------
-function fmtCur(n) { return n > 0 ? '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',') : '--'; }
+function fmtCur(n) {
+  if (n <= 0) return '--';
+  // Use minimum 2 decimal places, but increase precision to avoid display rounding
+  let d = 2;
+  while (d <= 6 && Math.abs(parseFloat(n.toFixed(d)) - n) > 1e-9) d++;
+  let s = n.toFixed(d);
+  // Trim trailing zeros beyond 2 decimal places
+  if (d > 2) s = s.replace(/(\.\d\d.*?)0+$/, '$1');
+  return '$' + s.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+// Parse a quantity that may contain comma separators (e.g. "10,000" → 10000)
+function parseQty(q) {
+  if (q === null || q === undefined || q === '') return 0;
+  return parseFloat(String(q).replace(/,/g, '')) || 0;
+}
+// Display a quantity with comma formatting (e.g. 10000 → "10,000")
+function fmtQty(q) {
+  if (q === null || q === undefined || q === '') return '--';
+  const n = parseQty(q);
+  return n > 0 ? n.toLocaleString() : (String(q) || '--');
+}
 function fmtDate(v) { if (!v) return '--'; const d = new Date(v+'T00:00:00'); return d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}); }
 // Normalize any date string from Excel to yyyy-mm-dd for <input type="date">
 function parseToInputDate(s) {
@@ -1018,7 +1071,7 @@ function parseToInputDate(s) {
 // Extract the first number from a mixed string, ignoring any surrounding text.
 function parseNum(s) {
   if (!s) return '';
-  const m = s.match(/[\d.]+/);
+  const m = String(s).replace(/,/g, '').match(/[\d.]+/);
   return m ? m[0] : '';
 }
 // Parse a semicolon-delimited email string → { to: "Name <first>", toRaw: "first@...", cc: "second@...; third@..." }
@@ -1185,8 +1238,8 @@ async function generatePO(silent = false) {
     document.getElementById('generateBtn').disabled = true;
     setTimeout(() => {
       const descList = lines.map(l => (l.desc||'').replace(/\n/g,' | ') + (l.pn ? ` [P/N: ${l.pn}]` : '')).join('\n');
-      const qtyPriceList = lines.map(l => `Qty: ${l.qty||'--'}   Buy Price: ${fmtCur(l.price)}`).join('\n');
-      const qtyPriceListSell = lines.map(l => `Qty: ${l.qty||'--'}   Price: ${l.sell > 0 ? fmtCur(l.sell) : fmtCur(l.price)}`).join('\n');
+      const qtyPriceList = lines.map(l => `Qty: ${fmtQty(l.qty)}   Buy Price: ${fmtCur(l.price)}`).join('\n');
+      const qtyPriceListSell = lines.map(l => `Qty: ${fmtQty(l.qty)}   Price: ${l.sell > 0 ? fmtCur(l.sell) : fmtCur(l.price)}`).join('\n');
       const vEmails = parseVendorEmails(vendor.contact, vendor.email);
       generatedEmails = [{
         to: vEmails.to,
@@ -1219,7 +1272,7 @@ function buildPOHtml(o, poNum) {
   const hasPN = o.lines.some(l => l.pn);
   const linesHtml = o.lines.map(l => {
     const descHtml = escHtml(l.desc).replace(/\n/g,'<br>');
-    return `<tr><td>${descHtml}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'Aptos','Inter',sans-serif">P/N: ${escHtml(l.pn)}</span>` : ''}</td><td>${l.qty||'--'}</td><td>${fmtCur(l.price)}</td><td>${l.qty&&l.price?fmtCur(l.qty*l.price):'--'}</td></tr>`;
+    return `<tr><td>${descHtml}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'Aptos','Inter',sans-serif">P/N: ${escHtml(l.pn)}</span>` : ''}</td><td>${fmtQty(l.qty)}</td><td>${fmtCur(l.price)}</td><td>${l.qty&&l.price?fmtCur(parseQty(l.qty)*l.price):'--'}</td></tr>`;
   }).join('');
   return `
     <div class="po-top">
@@ -1258,7 +1311,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
   splitLineOverrides = null; // consume immediately so it doesn't bleed into other calls
   var rows = ls.map(function(l, li) {
     var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
-    var qty = parseFloat(l.qty) || 0;
+    var qty = parseQty(l.qty);
     var total = qty * (parseFloat(l.price) || 0);
     var linePoNum = (lineOverrides && lineOverrides[li]) ? lineOverrides[li].poNum : (poNum || '');
     var lineCustPO = (lineOverrides && lineOverrides[li]) ? lineOverrides[li].custPO : (o.customerPO || '');
@@ -1269,7 +1322,7 @@ function buildVendorEmailHtml(o, v, ls, poNum) {
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
     r += '</tr>';
@@ -1330,7 +1383,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
     var poNum = poNums[oi];
     o.lines.forEach(function(l) {
       var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
-      var qty = parseFloat(l.qty) || 0;
+      var qty = parseQty(l.qty);
       var total = qty * (parseFloat(l.price) || 0);
       var r = '<tr>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;width:80px;white-space:nowrap;">' + escHtml(poNum||'') + '</td>';
@@ -1339,7 +1392,7 @@ function buildMultiPOVendorEmailHtml(orders, poNums, vendor) {
       if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
       r += '</td>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:90px;white-space:nowrap;">' + escHtml(o.shipDate||'') + '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
       r += '</tr>';
@@ -1437,7 +1490,7 @@ function buildCustomerEmailHtml(o, v, ls, poNum) {
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;vertical-align:top;">' + dh;
     if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
     r += '</td>';
-    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+    r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
     r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:13px;text-align:right;vertical-align:top;width:100px;">' + fmtCur(sp) + '</td>';
     r += '</tr>';
     return r;
@@ -1745,7 +1798,7 @@ const MSAL_CONFIG = {
   auth: {
     clientId: "b907c7ac-306b-4b00-b9a6-c639d581d98f",
     authority: "https://login.microsoftonline.com/3abf2937-e518-43e5-b2a4-456eecfa8b00",
-    redirectUri: "https://mphunited.github.io/PO-Generator-Test/PO.html", // TEMP — revert to /Generate/PO.html before production push
+    redirectUri: "https://mphunited.github.io/Generate/PO.html",
   },
   cache: { cacheLocation: "sessionStorage" }
 };
@@ -1764,8 +1817,8 @@ const USER_SIGNATURES = {
 
   // ── Peter Mannering — Controller ─────────────────────────────────────────
   'peter@mphunited.com': `
-<p style="margin:0 0 14px 0;font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#1a1612;">Regards,</p>
-<table cellpadding="0" cellspacing="0" border="0" style="font-family:Calibri,Arial,sans-serif;font-size:10pt;color:#1a1612;line-height:1.6;">
+<p style="margin:0 0 14px 0;font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;">Regards,</p>
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;">
   <tr><td style="padding-bottom:2px;"><strong>Peter Mannering</strong> &nbsp;<span style="color:#1a3a6e;font-weight:700;">MPH United | Controller</span></td></tr>
   <tr><td style="padding-bottom:6px;color:#555;">IBC Container Manufacturing &amp; Recycling</td></tr>
   <tr><td style="padding-bottom:8px;"><a href="mailto:peter@mphunited.com" style="color:#1a3a6e;text-decoration:none;">peter@mphunited.com</a> &nbsp;&nbsp; 248-765-2703</td></tr>
@@ -1777,7 +1830,7 @@ const USER_SIGNATURES = {
 
   // ── Christina Bayne — General Manager ────────────────────────────────────
   'christina@mphunited.com': `
-<table cellpadding="0" cellspacing="0" border="0" style="font-family:Calibri,Arial,sans-serif;font-size:10pt;color:#1a1612;line-height:1.6;">
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;">
   <tr><td style="padding-bottom:2px;"><strong>Christina Bayne</strong></td></tr>
   <tr><td style="padding-bottom:2px;color:#555;">General Manager</td></tr>
   <tr><td style="padding-bottom:6px;color:#555;">251-978-0563</td></tr>
@@ -1788,7 +1841,7 @@ const USER_SIGNATURES = {
 
   // ── Jordan Mannering — Purchasing ─────────────────────────────────────────
   'jordan@mphunited.com': `
-<table cellpadding="0" cellspacing="0" border="0" style="font-family:Calibri,Arial,sans-serif;font-size:10pt;color:#1a1612;line-height:1.6;">
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;">
   <tr><td style="padding-bottom:2px;"><strong>Jordan Mannering</strong></td></tr>
   <tr><td style="padding-bottom:6px;color:#555;">MPH United | Purchasing</td></tr>
   <tr><td style="padding-bottom:2px;color:#555;">C: 248.631.6802</td></tr>
@@ -1797,8 +1850,8 @@ const USER_SIGNATURES = {
 
   // ── Jack Schlaack — IT & Customer Service ─────────────────────────────────
   'jack@mphunited.com': `
-<p style="margin:0 0 14px 0;font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#1a1612;">With Gratitude,</p>
-<table cellpadding="0" cellspacing="0" border="0" style="font-family:Calibri,Arial,sans-serif;font-size:10pt;color:#1a1612;line-height:1.6;">
+<p style="margin:0 0 14px 0;font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;">With Gratitude,</p>
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;">
   <tr><td style="padding-bottom:2px;"><strong>Jack Schlaack</strong></td></tr>
   <tr><td style="padding-bottom:2px;color:#555;">IT &amp; Customer Service</td></tr>
   <tr><td style="padding-bottom:6px;color:#555;">M: 517.881.8309</td></tr>
@@ -1808,8 +1861,8 @@ const USER_SIGNATURES = {
 
   // ── Keith Ferrell — Customer Service ──────────────────────────────────────
   'keith@mphunited.com': `
-<p style="margin:0 0 14px 0;font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#1a1612;">Thank you,</p>
-<table cellpadding="0" cellspacing="0" border="0" style="font-family:Calibri,Arial,sans-serif;font-size:10pt;color:#1a1612;line-height:1.6;">
+<p style="margin:0 0 14px 0;font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;">Thank you,</p>
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Aptos,Calibri,Arial,sans-serif;font-size:12pt;color:#1a1612;line-height:1.6;">
   <tr><td style="padding-bottom:2px;"><strong>Keith Ferrell</strong></td></tr>
   <tr><td style="padding-bottom:2px;color:#555;">Customer Service</td></tr>
   <tr><td style="padding-bottom:6px;color:#555;">M: 801-900-7709</td></tr>
@@ -1827,21 +1880,22 @@ const RECYCLING_DRIVE_ID   = DRIVE_ID;
 const RECYCLING_FILE_NAME  = "MPH Recycling Orders.xlsm";
 const RECYCLING_STATUSES   = new Set(["PO REQUEST TO ACCOUNTING", "PO REVISION TO ACCOUNTING", "PO MOVING"]);
 const RECYCLING_SHEETS     = [
-  'Coastal Container','RRG(Rural Recycling Grinding)','UGC(United Container Group)',
+  'Coastal Container','RRG(Rural Recycling Grinding)','UCG(United Container Group)',
   'STS(Superior Tote Solutions)','SEC(SouthEast Container)','GPC(Great Plains Container)',
   '5 Star','Responsible Container'
 ];
 const POLL_INTERVAL = 30000;
 
 const VENDOR_SHEETS = [
-  'Core-IBCS','Core-Bottles','Alliance-Greenwood','Alliance-Hillsboro',
-  'United Container','5 Star','GPC(Great Plains-Garden City)','Ted Levine Drum Co',
+  'Core-IBCS','Core-Bottles','Alliance-Greenwood','UCG-Bottles',
+  'UCG-IBCS','5 Star','GPC(Great Plains-Garden City)','Ted Levine Drum Co',
   'TTW(Texas Tote Works)','SEC(SouthEast Container)','Clean Environmental',
   'RRG(Rural Recycling Grinding)','STS(Superior Tote Solutions)','Centurion',
   'FSC(Four Seasons Containers)','EFC(Eagle Ford Containers)',
   'GPCN(Great Plains Northstar-SD)','AgTank Solutions-Pumps',
   'Basco','Container Connectionz','Tri-Sure','EMP(Enterprise Marking Product)',
-  'Presley Enterprises','ENGY Container Products','ECO Green','CPP'
+  'Presley Enterprises','ENGY Container Products','ECO Green','CPP',
+  'KP Pallet & Packaging','Advatech'
 ];
 
 let msalInstance   = null;
@@ -2027,12 +2081,30 @@ async function withPaperAtTop(paper, fn) {
   const parent      = paper.parentNode;
   const nextSibling = paper.nextSibling;
   const savedStyle  = paper.style.cssText || '';
-  // Measure width before moving — offsetWidth is 0 when inside a hidden panel
-  const w = paper.offsetWidth || paper.scrollWidth || 760;
+  // Always use 760px — the desktop/letter width.  On mobile, paper.offsetWidth
+  // is the narrow viewport width which causes content to wrap onto a second page.
+  const PDF_WIDTH = 760;
+
+  // Inject a temporary <style> that overrides mobile-responsive CSS so the PDF
+  // always renders with the full desktop layout, regardless of viewport width.
+  const overrideStyle = document.createElement('style');
+  overrideStyle.id = 'pdf-mobile-override';
+  overrideStyle.textContent = [
+    '.po-top{display:flex!important;flex-direction:row!important;justify-content:space-between!important;align-items:flex-start!important;gap:0!important;}',
+    '.po-badge{text-align:right!important;}',
+    '.po-badge .po-title{font-size:28px!important;}',
+    '.po-company h1{font-size:22px!important;letter-spacing:2px!important;}',
+    '.po-meta{display:grid!important;grid-template-columns:1fr 1fr!important;}',
+    '.po-meta-box{border-right:1px solid rgba(26,22,18,0.12)!important;}',
+    '.po-meta-box:nth-child(2n){border-right:none!important;}',
+    '.po-sig{display:grid!important;grid-template-columns:1fr 1fr!important;gap:40px!important;}',
+    '.po-paper{padding:44px 52px!important;max-width:none!important;}'
+  ].join('');
+  document.head.appendChild(overrideStyle);
 
   // Move to top of <body>
   document.body.insertBefore(paper, document.body.firstChild);
-  paper.style.cssText = 'position:static;margin:0;width:' + w + 'px;';
+  paper.style.cssText = 'position:static;margin:0;width:' + PDF_WIDTH + 'px;';
   window.scrollTo(0, 0);
 
   // Give the browser two frames to recalculate layout before html2canvas fires
@@ -2046,6 +2118,9 @@ async function withPaperAtTop(paper, fn) {
       if (nextSibling) parent.insertBefore(paper, nextSibling);
       else             parent.appendChild(paper);
     }
+    // Remove the override styles
+    const ov = document.getElementById('pdf-mobile-override');
+    if (ov) ov.remove();
   }
 }
 
@@ -2165,6 +2240,8 @@ function switchImportSource(src) {
   document.getElementById("btnLoadOrder").disabled  = true;
   document.getElementById("btnLoadSplit").style.display = "none";
   document.getElementById("btnLoadSplit").disabled  = true;
+  document.getElementById("btnMultiShip").style.display = "none";
+  document.getElementById("btnMultiShip").disabled  = true;
   document.getElementById("btnSplitRegular").style.display = "none";
   document.getElementById("btnSplitRegular").disabled = true;
   const vf = document.getElementById("filterVendorSheet");
@@ -2331,7 +2408,11 @@ function closeImport() {
 function onCheckboxChange() {
   const multiDoc = document.getElementById('multiPODocument');
   if (multiDoc && multiDoc.classList.contains('active') && lastMultiPORawOrders.length >= 2) {
-    generateMultiplePOs(true);
+    if (lastMultiPOMode === 'multiShip') {
+      loadAsMultiShipTo(true);
+    } else {
+      generateMultiplePOs(true);
+    }
   } else {
     generatePO(true);
   }
@@ -2353,6 +2434,8 @@ function filterImportTable() {
   document.getElementById("btnLoadSplit").disabled = true;
   document.getElementById("btnSplitMultiPO").style.display = "none";
   document.getElementById("btnSplitMultiPO").disabled = true;
+  document.getElementById("btnMultiShip").style.display = "none";
+  document.getElementById("btnMultiShip").disabled = true;
   document.getElementById("btnSplitRegular").style.display = "none";
   document.getElementById("btnSplitRegular").disabled = true;
   document.getElementById("importFooterHint").textContent = "Select 1 row to load • Select up to 4 rows for Split Loads";
@@ -2388,6 +2471,7 @@ function renderImportTable() {
     const d = o.desc||"—";
     return "<tr onclick=\"selectImportRow("+i+")\" id=\"irow-"+i+"\">" +
       "<td class=\"td-status\"><span class=\"status-pill "+statusPillClass(o.status)+"\">"+st+"</span></td>" +
+      "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.vendor||o.sheet||"").split(" - ")[0]+"</td>" +
       "<td class=\"td-cust\">"+(o.customer||"—")+"</td>" +
       "<td style=\"white-space:nowrap;color:var(--gold);font-weight:600\">"+(o.mph_po||"—")+"</td>" +
       "<td style=\"white-space:nowrap\">"+(o.cust_po||"—")+"</td>" +
@@ -2396,13 +2480,12 @@ function renderImportTable() {
       "<td style=\"text-align:right;white-space:nowrap\">"+(o.buy||"—")+"</td>" +
       "<td style=\"text-align:right;white-space:nowrap\">"+(o.sell||"—")+"</td>" +
       "<td style=\"white-space:nowrap\">"+fmtDate(o.ship_date)+"</td>" +
-      "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.vendor||o.sheet||"").split(" - ")[0]+"</td>" +
       "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.freight||"—")+"</td>" +
       "<td style=\"white-space:nowrap;font-size:10px;color:var(--ink2)\">"+(o.csr||"—")+"</td></tr>";
   }).join("");
   wrap.innerHTML = "<table class=\"import-table\"><thead><tr>" +
-    "<th>Status</th><th>Customer</th><th>MPH PO</th><th>Cust PO</th><th>Description</th>" +
-    "<th>Qty</th><th>Buy</th><th>Sell</th><th>Ship Date</th><th>Vendor</th><th>Freight</th><th>CSR</th>" +
+    "<th>Status</th><th>Vendor</th><th>Customer</th><th>MPH PO</th><th>Cust PO</th><th>Description</th>" +
+    "<th>Qty</th><th>Buy</th><th>Sell</th><th>Ship Date</th><th>Freight</th><th>CSR</th>" +
     "</tr></thead><tbody>"+rows+"</tbody></table>";
 }
 
@@ -2424,6 +2507,7 @@ function updateImportFooter() {
   const btnLoad = document.getElementById("btnLoadOrder");
   const btnSplit = document.getElementById("btnLoadSplit");
   const btnSplitMulti = document.getElementById("btnSplitMultiPO");
+  const btnMultiShip = document.getElementById("btnMultiShip");
   const btnSplitReg = document.getElementById("btnSplitRegular");
   const btnMulti = document.getElementById("btnMultiPO");
   const hint = document.getElementById("importFooterHint");
@@ -2432,6 +2516,7 @@ function updateImportFooter() {
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
+    btnMultiShip.style.display = "none"; btnMultiShip.disabled = true;
     btnSplitReg.style.display = "none"; btnSplitReg.disabled = true;
     btnMulti.style.display = "none"; btnMulti.disabled = true;
     hint.textContent = "Select 1 row to load • Select up to 4 rows for Split Loads • Select up to 20 for Multiple POs";
@@ -2443,6 +2528,7 @@ function updateImportFooter() {
     btnLoad.disabled = false;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
+    btnMultiShip.style.display = "none"; btnMultiShip.disabled = true;
     btnSplitReg.style.display = "none"; btnSplitReg.disabled = true;
     btnMulti.style.display = "none"; btnMulti.disabled = true;
     const d = o1.desc||"";
@@ -2451,24 +2537,27 @@ function updateImportFooter() {
     btnLoad.disabled = true;
     btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
     btnSplitMulti.style.display = "inline-block"; btnSplitMulti.disabled = false;
-    btnSplitReg.style.display = "none"; btnSplitReg.disabled = true; // needs ≥3
+    btnMultiShip.style.display = "inline-block"; btnMultiShip.disabled = false;
+    btnSplitReg.style.display = "inline-block"; btnSplitReg.disabled = false;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
-    hint.textContent = "⚡ Split Load or ⚡# Split+Multi or 📄 Multiple POs (" + count + "): " + names + " • Click another row to add (or select Split & Regular Load with 3–4 rows)";
+    hint.textContent = "⚡ Split | ⚡# Split+Multi | ⚡⇶ Multi Ship-To | ⚡+ Split & Regular | 📄 Multiple POs (" + count + "): " + names + " • Click another row to add";
   } else if (count <= 4) {
     btnLoad.disabled = true;
     btnSplit.style.display = "inline-block"; btnSplit.disabled = false;
     btnSplitMulti.style.display = "inline-block"; btnSplitMulti.disabled = false;
+    btnMultiShip.style.display = "inline-block"; btnMultiShip.disabled = false;
     btnSplitReg.style.display = "inline-block"; btnSplitReg.disabled = false;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
-    hint.textContent = "⚡ Split Load | ⚡# Split+Multi | ⚡+ Split & Regular | 📄 Multiple POs (" + count + "): " + names + (count < 4 ? " • Click another row to add" : " • Max reached for Split modes");
+    hint.textContent = "⚡ Split | ⚡# Split+Multi | ⚡⇶ Multi Ship-To | ⚡+ Split & Regular | 📄 Multiple POs (" + count + "): " + names + (count < 4 ? " • Click another row to add" : " • Max reached for Split modes");
   } else {
     // 5–20: Multiple POs only (Split Load capped at 4)
     btnLoad.disabled = true;
     btnSplit.style.display = "none"; btnSplit.disabled = true;
     btnSplitMulti.style.display = "none"; btnSplitMulti.disabled = true;
-    btnSplitReg.style.display = "none"; btnSplitReg.disabled = true;
+    btnMultiShip.style.display = "none"; btnMultiShip.disabled = true;
+    btnSplitReg.style.display = "inline-block"; btnSplitReg.disabled = false;
     btnMulti.style.display = "inline-block"; btnMulti.disabled = false;
-    hint.textContent = "📄 Multiple POs (" + count + "): " + names + (count < 20 ? " • Click another row to add (max 20)" : " • Max 20 reached");
+    hint.textContent = "⚡+ Split & Regular | 📄 Multiple POs (" + count + "): " + names + (count < 20 ? " • Click another row to add (max 20)" : " • Max 20 reached");
   }
 }
 
@@ -2533,6 +2622,14 @@ async function loadSelectedOrder() {
 async function loadAsSplitLoad() {
   const selIdxs = importSelectedIdxs.slice(0, 4); // Split Load capped at 4
   if (selIdxs.length < 2) return;
+  // Ship-to mismatch guard: this flow assumes a single Ship To across all rows.
+  // If the rows differ, route the user to the Multi Ship-To button instead.
+  const _shipTos = selIdxs.map(i => (importFiltered[i].ship_to || '').trim()).filter(Boolean);
+  const _uniqShipTos = [...new Set(_shipTos)];
+  if (_uniqShipTos.length > 1) {
+    showToast('Selected rows ship to different locations. Use ⚡⇶ Split / Multi Ship-To instead, or fix the Ship To column in Excel.', 6000);
+    return;
+  }
   // Clear any leftover multi-PO output
   const multiDoc2 = document.getElementById('multiPODocument');
   multiDoc2.innerHTML = '';
@@ -2620,6 +2717,13 @@ async function loadAsSplitLoad() {
 async function loadSplitAndGenerateMultiple() {
   const selIdxs = importSelectedIdxs.slice(0, 4); // Capped at 4, same as Split Load
   if (selIdxs.length < 2) return;
+  // Ship-to mismatch guard: this flow ships everything to a single destination.
+  const _shipTos = selIdxs.map(i => (importFiltered[i].ship_to || '').trim()).filter(Boolean);
+  const _uniqShipTos = [...new Set(_shipTos)];
+  if (_uniqShipTos.length > 1) {
+    showToast('Selected rows ship to different locations. Use ⚡⇶ Split / Multi Ship-To instead, or fix the Ship To column in Excel.', 6000);
+    return;
+  }
   const rawOrders = selIdxs.map(i => importFiltered[i]);
   const pp = s => parseNum(s);
   const o1 = rawOrders[0];
@@ -2726,24 +2830,48 @@ async function loadSplitAndGenerateMultiple() {
 // One combined vendor email covers both.
 async function loadSplitAndRegular() {
   const allIdxs = importSelectedIdxs.slice();
-  if (allIdxs.length < 3 || allIdxs.length > 4) {
-    showToast('Select 3 or 4 rows: the first 2–3 are the split load, the last is the regular load.', 5000);
+  if (allIdxs.length < 2) {
+    showToast('Select at least 2 rows — rows with "split load" in Appt. Time or P/N become the split PO; others become the regular PO.', 5000);
     return;
   }
-  const splitIdxs   = allIdxs.slice(0, -1);   // all but last
-  const regularIdx  = allIdxs[allIdxs.length - 1]; // last
-  const splitRaws   = splitIdxs.map(i => importFiltered[i]);
-  const regularRaw  = importFiltered[regularIdx];
+
+  // Auto-detect split vs regular based on Appt. Time or P/N containing "split load" (case-insensitive)
+  const isSplitRow = idx => {
+    const o = importFiltered[idx];
+    const appt = (o.appt || '').toLowerCase();
+    const pn   = (o.pn   || '').toLowerCase();
+    return appt.includes('split load') || pn.includes('split load');
+  };
+
+  const splitIdxs  = allIdxs.filter(i => isSplitRow(i));
+  const regularIdxs = allIdxs.filter(i => !isSplitRow(i));
+
+  if (splitIdxs.length === 0) {
+    showToast('No split load rows detected. Make sure at least one selected row has "split load" in the Appt. Time or P/N column.', 6000);
+    return;
+  }
+  if (regularIdxs.length === 0) {
+    showToast('No regular load rows detected. Make sure at least one selected row does NOT have "split load" in the Appt. Time or P/N column.', 6000);
+    return;
+  }
+
+  const splitRaws  = splitIdxs.map(i => importFiltered[i]);
+  const regularRaw = importFiltered[regularIdxs[0]]; // use first regular row
   const pp = s => parseFloat(parseNum(s)) || 0;
 
   const vk = matchVendorKey(splitRaws[0].vendor, splitRaws[0].sheet);
   const vendor = VENDORS[vk] || { name: splitRaws[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
 
-  document.getElementById("isBlindShipment").checked = false;
+  // Auto-blind for vendors in BLIND_VENDOR_KEYS (mirrors loadVendor logic since
+  // split+regular flow doesn't call loadVendor()).
+  const autoBlindSR = isBlindByDefault(vk);
+  document.getElementById("isBlindShipment").checked = autoBlindSR;
   document.getElementById("isRevised").checked = false;
   document.getElementById("isMoveOrders").checked = false;
   document.getElementById("revisedPOField").style.display = "none";
   document.getElementById("revisedPONum").value = "";
+  const blindHintSR = document.getElementById('blindAutoHint');
+  if (blindHintSR) blindHintSR.style.display = autoBlindSR ? 'inline' : 'none';
 
   setLoading(true, 'Building Split & Regular POs…', 'Generating PO numbers');
   closeImport();
@@ -2856,12 +2984,13 @@ async function loadSplitAndRegular() {
     </div>`;
 
   multiDoc.innerHTML = `
-    <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
-      <div style="flex:1;">
-        <strong>📋 Split &amp; Regular Load — How to send:</strong><br>
-        <strong>1.</strong> Click the <em>Vendor Email</em> tab, then click <em>Send POs to Outlook in Browser</em> — both PDFs are attached automatically.<br>
-        <strong>2.</strong> Or save each PDF individually by clicking <em>Save PO PDF</em> on each tab.
-      </div>
+    <div class="po-actions no-print">
+      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
+    </div>
+    <div class="no-print po-send-hint" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;">
+      <strong>📋 Split &amp; Regular Load — How to send:</strong><br>
+      Both PO PDFs are attached automatically when you click <em>Send POs to Outlook in Browser</em>.<br>
+      Or save each PDF individually by clicking <em>Save PO PDF</em> on each tab.
     </div>
     <div class="output-tabs">${tabsHtml}</div>
     ${panelsHtml}${emailPanelHtml}`;
@@ -2893,11 +3022,16 @@ async function generateMultiplePOs(fromCheckbox = false) {
 
   // Reset checkboxes only when loading fresh orders from the import panel
   if (!fromCheckbox) {
-    document.getElementById("isBlindShipment").checked = false;
+    // Auto-blind for vendors in BLIND_VENDOR_KEYS (mirrors loadVendor logic since
+    // multi-PO flow doesn't call loadVendor()).
+    const autoBlind = isBlindByDefault(vk);
+    document.getElementById("isBlindShipment").checked = autoBlind;
     document.getElementById("isRevised").checked = false;
     document.getElementById("isMoveOrders").checked = false;
     document.getElementById("revisedPOField").style.display = "none";
     document.getElementById("revisedPONum").value = "";
+    const blindHint = document.getElementById('blindAutoHint');
+    if (blindHint) blindHint.style.display = autoBlind ? 'inline' : 'none';
   }
 
   lastMultiPORawOrders = rawOrders;
@@ -2969,15 +3103,9 @@ async function generateMultiplePOs(fromCheckbox = false) {
   </div>`;
 
   multiDoc.innerHTML = `
-    <div class="no-print" style="background:#fffbea;border:1px solid #e6c84a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#5a4a00;line-height:1.7;display:flex;align-items:flex-start;gap:14px;">
-      <div style="flex:1;">
-        <strong>📋 Multiple POs — How to send:</strong><br>
-        <strong>1.</strong> Click the <em>Vendor Email</em> tab, then click <em>Send POs to Outlook in Browser</em> — all PDFs are attached automatically.<br>
-        <strong>2.</strong> Or save each PDF individually by clicking <em>Save PO PDF</em> on each PO tab.
-      </div>
-      <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
-        <button onclick="generateMultiplePOs(true)" style="background:#1a3a6e;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-family:'Aptos','Inter',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='#254d91'" onmouseout="this.style.background='#1a3a6e'">↻ Regenerate POs</button>
-      </div>
+    <div class="po-actions no-print">
+      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send POs to Outlook in Browser</button>
+      <button class="btn-action" onclick="generateMultiplePOs(true)">↻ Regenerate POs</button>
     </div>
     <div class="output-tabs">${tabsHtml}</div>
     ${panelsHtml}`;
@@ -2993,6 +3121,294 @@ async function generateMultiplePOs(fromCheckbox = false) {
   document.title = (isRevisedMulti ? 'Revised ' : '') + 'MPH Multiple POs ' + poNums.join(', ');
 }
 
+// ── Multi Ship-To Split Load ─────────────────────────────────────────────────
+// One physical shipment with 2-4 different drop-off destinations (possibly
+// different customers). Mints ONE shared MPH PO# and renders ONE redesigned PO
+// PDF with a section per destination. Vendor email reuses
+// buildMultiPOVendorEmailHtml (which already dedupes Ship To blocks). No
+// customer confirmation emails are generated. The standard PO PDF
+// (buildPOHtml/renderPO) is intentionally untouched.
+//
+// fromCheckbox=true is set when one of the sidebar toggles (Blind/Revised/
+// Move Orders) is flipped while this flow's output is on screen — used to
+// regenerate without remintng a PO# unnecessarily.
+async function loadAsMultiShipTo(fromCheckbox = false) {
+  const selIdxs = importSelectedIdxs.slice(0, 4); // capped at 4 like other split flows
+  if (selIdxs.length < 2) return;
+
+  const rawOrders = selIdxs.map(i => importFiltered[i]);
+  const pp = s => parseFloat(parseNum(s)) || 0;
+  const o1 = rawOrders[0];
+
+  // ── Vendor consistency guard ──
+  const vKey0 = matchVendorKey(o1.vendor || '', o1.sheet || '');
+  const vKeys = rawOrders.map(o => matchVendorKey(o.vendor || '', o.sheet || ''));
+  if (vKeys.some(k => k !== vKey0)) {
+    showToast('All selected rows must share the same vendor for a Multi Ship-To load. Adjust your selection.', 6000);
+    return;
+  }
+  const vendor = VENDORS[vKey0] || { name: o1.vendor || '', address: '', contact: '', email: '', phone: '', dockHours: '', products: [] };
+
+  // ── Coastal-mix guard (Coastal flips Ship To → Ship From; semantically incompatible with non-Coastal in one PO) ──
+  const coastalFlags = rawOrders.map(o => (o.source === 'recycling' && o.sheet === 'Coastal Container'));
+  const allCoastal = coastalFlags.every(Boolean);
+  const noneCoastal = coastalFlags.every(f => !f);
+  if (!allCoastal && !noneCoastal) {
+    showToast('Cannot mix Coastal Container rows with non-Coastal rows in a Multi Ship-To load.', 6000);
+    return;
+  }
+
+  // ── Ship-to-uniqueness sanity check (this flow exists FOR different ship-tos) ──
+  // Not blocking — operations may legitimately want a single shipto on the new layout.
+  // Just inform.
+  if (!fromCheckbox) {
+    const _shipTos = rawOrders.map(o => (o.ship_to || '').trim()).filter(Boolean);
+    const _uniq = [...new Set(_shipTos)];
+    if (_uniq.length === 1 && rawOrders.length > 1) {
+      showToast('Heads up: all rows ship to the same location. The standard ⚡ Split Load button might be more appropriate.', 5000);
+      // continue anyway — user clicked this button on purpose
+    }
+  }
+
+  // ── Defensive state hygiene — clear leftovers from prior flows ──
+  splitLineOverrides = null;
+  pendingPONum = null;
+
+  // ── Toggles (only when loading fresh, not when re-running from checkbox) ──
+  const isRevised = document.getElementById('isRevised').checked;
+  const isMove    = document.getElementById('isMoveOrders').checked;
+  if (!fromCheckbox) {
+    const autoBlind = isBlindByDefault(vKey0);
+    document.getElementById('isBlindShipment').checked = autoBlind;
+    const blindHint = document.getElementById('blindAutoHint');
+    if (blindHint) blindHint.style.display = autoBlind ? 'inline' : 'none';
+  }
+  const isBlind = document.getElementById('isBlindShipment').checked;
+
+  // ── Revised/Move with mismatched existing PO#s → bail (would silently drop info) ──
+  if (isRevised || isMove) {
+    const existing = rawOrders.map(o => (o.mph_po || '').trim()).filter(Boolean);
+    const uniqExisting = [...new Set(existing)];
+    if (uniqExisting.length > 1) {
+      showToast('Selected rows have different existing MPH PO numbers. Use the Multiple POs flow instead so each PO keeps its own number.', 7000);
+      return;
+    }
+  }
+
+  // ── Mint or reuse the shared PO# ──
+  setLoading(true, 'Building Multi Ship-To PO…', 'Generating PO number');
+  if (!fromCheckbox) closeImport();
+  let sharedPoNum;
+  if (isRevised || isMove) {
+    sharedPoNum = (rawOrders[0].mph_po || '').trim() || await genPONum();
+  } else {
+    // On checkbox re-run, reuse the prior PO# rather than minting a new one
+    sharedPoNum = fromCheckbox && lastMultiPOPoNums[0] ? lastMultiPOPoNums[0] : await genPONum();
+  }
+
+  // ── Build per-leg objects. v1: every leg's poNum is the shared PO#.
+  //    The per-leg slot exists so future multi-PO# expansion is a small change.
+  const legs = rawOrders.map(ro => {
+    const isCoastal = (ro.source === 'recycling' && ro.sheet === 'Coastal Container');
+    return {
+      poNum:      sharedPoNum,
+      customer:   ro.customer || '',
+      customerPO: ro.cust_po || 'N/A',
+      shipTo:     ro.ship_to || '--',
+      shipDate:   fmtDate(parseToInputDate(ro.ship_date) || new Date().toISOString().split('T')[0]),
+      apptTime:   ro.appt || '',
+      salesOrder: ro.alliance_so || '',
+      notes:      (ro.po_notes || '').trim(),
+      isCoastal:  isCoastal,
+      lines: [{
+        desc:  ro.desc || 'IBC Product',
+        pn:    ro.pn || '',
+        qty:   pp(ro.qty) || 1,
+        price: pp(ro.buy),
+        sell:  pp(ro.sell)
+      }]
+    };
+  });
+
+  // ── Build orders[] in the shape buildMultiPOVendorEmailHtml expects ──
+  const orders = legs.map(leg => ({
+    customerName: leg.customer,
+    customerPO:   leg.customerPO,
+    orderDate:    fmtDate(new Date().toISOString().split('T')[0]),
+    shipTo:       leg.shipTo,
+    customerEmail: '',
+    customerContactFmt: '',
+    customerContactCc: '',
+    shipDate:     leg.shipDate,
+    shipVia:      o1.freight || '',
+    apptTime:     leg.apptTime,
+    salesOrder:   leg.salesOrder,
+    specialInstructions: leg.notes,
+    isRevised:    isRevised,
+    isBlind:      isBlind,
+    isCoastal:    leg.isCoastal,
+    vendor:       vendor,
+    lines:        leg.lines,
+    get total() { return this.lines.reduce((s, l) => s + l.qty * l.price, 0); }
+  }));
+
+  // ── Persist state for downstream flows (Outlook draft, ZIP, checkbox re-run) ──
+  multiShipLegs        = legs;
+  lastMultiPORawOrders = rawOrders;
+  lastMultiPOPoNums    = [sharedPoNum];
+  lastMultiPOMode      = 'multiShip';
+  mphPONum             = sharedPoNum;
+
+  setLoading(false);
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('poDocument').classList.remove('active');
+
+  // ── Render the output panel: one PDF tab + one email tab ──
+  const multiDoc = document.getElementById('multiPODocument');
+  const tabsHtml =
+    `<button class="output-tab active" onclick="switchMultiTab(0,this)">📄 Multi Ship-To PO (${sharedPoNum})</button>` +
+    `<button class="output-tab" onclick="switchMultiTab(1,this)">📧 Vendor Email</button>`;
+
+  const panelsHtml =
+    `<div class="output-panel active" id="mpo-panel-0">
+      <div class="po-actions no-print">
+        <button class="btn-action primary" onclick="printMultiPO(0,'${sharedPoNum}','Multi Ship-To')">🖨 Save Multi Ship-To PO PDF</button>
+      </div>
+      <div class="po-paper" id="mpo-paper-0"></div>
+    </div>`;
+
+  const vEmails = parseVendorEmails(vendor.contact, vendor.email);
+  // Pass an array of N copies of the same PO# so per-line tagging stays consistent
+  const poNumsForEmail = legs.map(() => sharedPoNum);
+  const combinedHtml = buildMultiPOVendorEmailHtml(orders, poNumsForEmail, vendor);
+
+  const subjLabel = isBlind
+    ? 'MPH United PO ' + sharedPoNum + ' | Multi Ship-To | Ship ' + (legs[0].shipDate || '')
+    : 'MPH United PO ' + sharedPoNum + ' -- Multi Ship-To | Ship ' + (legs[0].shipDate || '');
+
+  const emailPanelHtml =
+    `<div class="output-panel" id="mpo-panel-1">
+      <div class="po-actions no-print">
+        <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send PO to Outlook in Browser</button>
+      </div>
+      <div class="no-print" style="font-size:12px;color:#888;margin:4px 0 8px;padding:0 2px;">📎 Creates a draft in Outlook with the PO PDF automatically attached — ready to review and send. No customer confirmation emails are generated for this flow.</div>
+      <div class="email-preview" id="mpo-emailDiv"></div>
+    </div>`;
+
+  multiDoc.innerHTML = `
+    <div class="po-actions no-print">
+      <button class="btn-action primary" onclick="openMultiPOEmail()">✉ Send PO to Outlook in Browser</button>
+    </div>
+    <div class="no-print po-send-hint" style="background:#e8f4f6;border:1px solid #0c7e8a;border-radius:8px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#0a4a52;line-height:1.7;">
+      <strong>📋 Multi Ship-To Load — How to send:</strong><br>
+      One PO PDF (with a section per destination) is attached automatically when you click <em>Send PO to Outlook in Browser</em>.<br>
+      Or save the PDF directly by clicking <em>Save Multi Ship-To PO PDF</em>.
+    </div>
+    <div class="output-tabs">${tabsHtml}</div>
+    ${panelsHtml}${emailPanelHtml}`;
+
+  document.getElementById('mpo-paper-0').innerHTML = renderMultiShipPO(legs, vendor, sharedPoNum, { isBlind, isRevised, allCoastal });
+
+  multiPOEmailData = {
+    to:       vEmails.to,
+    cc:       vEmails.cc || '',
+    subject:  (isRevised ? '[REVISED] ' : '') + subjLabel,
+    bodyHtml: combinedHtml,
+    body:     ''
+  };
+  renderEmailDiv('mpo-emailDiv', multiPOEmailData);
+
+  multiDoc.classList.add('active');
+  document.title = (isRevised ? 'Revised ' : '') + 'MPH PO ' + sharedPoNum + ' — Multi Ship-To';
+}
+
+// Renders the Multi Ship-To PO PDF: one shared header + N stacked sections
+// (gold-bordered, ink header) — modeled on renderWashReturnPO. Each section is
+// page-break-avoidant so a tight page produces a clean second page rather than
+// splitting a destination block.
+function renderMultiShipPO(legs, vendor, poNum, opts) {
+  opts = opts || {};
+  const isBlind = !!opts.isBlind;
+  const isRevised = !!opts.isRevised;
+  const allCoastal = !!opts.allCoastal;
+  const logoSrc = document.querySelector('.topbar-logo img') ? document.querySelector('.topbar-logo img').src : '';
+
+  // Aggregate header values: take from first leg
+  const firstLeg = legs[0] || {};
+  const shipVia = (legs[0] && legs[0].shipVia) || '';
+
+  // Compute order total across all legs
+  const orderTotal = legs.reduce((sum, leg) => sum + leg.lines.reduce((s, l) => s + l.qty * l.price, 0), 0);
+
+  const sectionsHtml = legs.map((leg, idx) => {
+    const linesHtml = leg.lines.map(l => {
+      const descHtml = escHtml(l.desc || '').replace(/\n/g, '<br>');
+      const lineTotal = (l.qty && l.price) ? fmtCur(parseQty(l.qty) * parseFloat(l.price)) : '--';
+      return `<tr>
+        <td>${descHtml}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'Aptos','Inter',sans-serif">P/N: ${escHtml(l.pn)}</span>` : ''}</td>
+        <td>${fmtQty(l.qty)}</td><td>${fmtCur(l.price)}</td><td>${lineTotal}</td>
+      </tr>`;
+    }).join('');
+
+    // Header content: when blind, drop customer name and meta row
+    const headerLabel = isBlind ? `SPLIT LOAD ${idx+1}` : `SPLIT LOAD ${idx+1} — Drop ${idx+1}`;
+    const customerLine = isBlind ? '' : `<span class="wr-order-customer">${escHtml(leg.customer || '')}</span>`;
+    const metaLine = isBlind ? '' : `<div class="wr-order-meta">
+      <span><strong style="color:var(--gold)">Customer PO:</strong> ${escHtml(leg.customerPO || 'N/A')}</span>
+      <span><strong style="color:var(--gold)">Ship Date:</strong> ${escHtml(leg.shipDate || '')}</span>
+      ${leg.apptTime ? `<span><strong style="color:var(--gold)">Appt:</strong> ${escHtml(leg.apptTime)}</span>` : ''}
+      ${leg.salesOrder ? `<span><strong style="color:var(--gold)">SO #:</strong> ${escHtml(leg.salesOrder)}</span>` : ''}
+    </div>`;
+
+    // Body Ship To line: hidden entirely when blind
+    const shipToLine = isBlind
+      ? ''
+      : `<div style="font-size:11px;color:var(--ink2);margin-bottom:10px;"><strong>${leg.isCoastal ? 'Ship From' : 'Ship To'}:</strong> ${escHtml(leg.shipTo || '').replace(/\n/g, ', ')}</div>`;
+
+    return `<div class="wr-order-section">
+      <div class="wr-order-header">
+        <span class="wr-order-label">${headerLabel}</span>
+        ${customerLine}
+        ${metaLine}
+      </div>
+      <div class="wr-order-body">
+        ${shipToLine}
+        <table class="po-table" style="width:100%;margin-bottom:${leg.notes ? '10px' : '0'}">
+          <thead><tr><th>Product / Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+          <tbody>${linesHtml}</tbody>
+        </table>
+        ${leg.notes ? `<div class="po-notes"><div class="po-notes-label">PO Notes</div><div class="po-notes-text">${escHtml(leg.notes).replace(/\n/g, '<br>')}</div></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  const subTitle = isRevised
+    ? '<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#c00;margin-bottom:2px;">[REVISED] Multi Ship-To</div>'
+    : '<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:2px;">Multi Ship-To Split Load</div>';
+
+  return `<div class="po-top">
+    <div class="po-company">${logoSrc ? `<img src="${logoSrc}" style="height:48px;object-fit:contain;">` : '<strong style="font-size:18px">MPH United</strong>'}
+      <div class="po-company-details">3600 Skokie Valley Rd, Suite 101<br>Highland Park, IL 60035<br>Accounts Payable: ap@mphunited.com</div>
+    </div>
+    <div class="po-badge">
+      ${subTitle}
+      <div class="po-title">Purchase Order</div>
+      <div class="po-number">${poNum}</div>
+    </div>
+  </div>
+  <div class="po-meta">
+    <div class="po-meta-box"><div class="po-meta-label">Vendor</div><div class="po-meta-value">${escHtml(vendor.name)}<br><span style="font-size:10px;color:var(--ink2)">${escHtml(vendor.address || '').replace(/\n/g, '<br>')}</span><br><span style="font-size:10px;color:var(--ink2)">${escHtml(vendor.contact || '')} -- ${escHtml(vendor.phone || '')}</span></div></div>
+    <div class="po-meta-box"><div class="po-meta-label">Ship Via</div><div class="po-meta-value">${escHtml(shipVia || '--')}</div></div>
+    <div class="po-meta-box"><div class="po-meta-label">MPH PO #</div><div class="po-meta-value">${poNum}</div></div>
+    <div class="po-meta-box"><div class="po-meta-label">Required Ship Date</div><div class="po-meta-value" style="color:#c00;font-weight:700">${escHtml((firstLeg.shipDate) || '--')}</div></div>
+  </div>
+  ${sectionsHtml}
+  <div style="margin-top:14px;padding:10px 14px;border-top:2px solid var(--gold);display:flex;justify-content:space-between;align-items:center;font-family:'Aptos','Inter',sans-serif;">
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink2);font-weight:700;">${legs.length} Destinations</div>
+    <div style="font-size:14px;font-weight:700;color:var(--ink);">ORDER TOTAL: ${fmtCur(orderTotal)}</div>
+  </div>`;
+}
+
 function switchMultiTab(idx, btn) {
   document.querySelectorAll('#multiPODocument .output-tab').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('#multiPODocument .output-panel').forEach(p => p.classList.remove('active'));
@@ -3001,7 +3417,7 @@ function switchMultiTab(idx, btn) {
   if (panel) panel.classList.add('active');
 }
 
-async function printMultiPO(idx, poNum) {
+async function printMultiPO(idx, poNum, suffix) {
   const paper = document.getElementById('mpo-paper-' + idx);
   if (!paper) return;
   const btn = document.querySelector(`#mpo-panel-${idx} .btn-action.primary`);
@@ -3012,7 +3428,7 @@ async function printMultiPO(idx, poNum) {
     await withPaperAtTop(paper, () =>
       html2pdf().set({
         margin: [0.45, 0.45, 0.45, 0.45],
-        filename: 'MPH PO ' + (poNum || ('Document-' + idx)) + '.pdf',
+        filename: 'MPH PO ' + (poNum || ('Document-' + idx)) + (suffix ? ' ' + suffix : '') + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, logging: false },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -3108,7 +3524,8 @@ async function openMultiPOEmail() {
                   .from(paper).output('blob')
               );
               const b64 = await blobToBase64(pdfBlob);
-              await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (lastMultiPOPoNums[i]||i) + '.pdf', b64);
+              const _attachSuffix = (lastMultiPOMode === 'multiShip') ? ' Multi Ship-To' : '';
+              await attachFileToDraft(mailToken, draft.id, 'MPH PO ' + (lastMultiPOPoNums[i]||i) + _attachSuffix + '.pdf', b64);
             } catch(pdfErr) { console.warn('PDF attach failed for PO ' + i + ':', pdfErr); }
           }
         }
@@ -3216,10 +3633,10 @@ function renderWashReturnPO(orders, vendor, poNum) {
   const sectionsHtml = orders.map((o, idx) => {
     const linesHtml = o.lines.map(l => {
       const descHtml = escHtml(l.desc||'').replace(/\n/g,'<br>');
-      const total = (l.qty && l.price) ? fmtCur(parseFloat(l.qty) * parseFloat(l.price)) : '--';
+      const total = (l.qty && l.price) ? fmtCur(parseQty(l.qty) * parseFloat(l.price)) : '--';
       return `<tr>
         <td>${descHtml}${l.pn ? `<br><span style="font-size:10px;color:var(--gold);font-family:'Aptos','Inter',sans-serif">P/N: ${escHtml(l.pn)}</span>` : ''}</td>
-        <td>${l.qty||'--'}</td><td>${fmtCur(l.price)}</td><td>${total}</td>
+        <td>${fmtQty(l.qty)}</td><td>${fmtCur(l.price)}</td><td>${total}</td>
       </tr>`;
     }).join('');
     return `<div class="wr-order-section">
@@ -3270,13 +3687,13 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
   orders.forEach(function(o, idx) {
     var rows = o.lines.map(function(l) {
       var dh = escHtml(l.desc||'').replace(/\n/g,'<br>');
-      var qty = parseFloat(l.qty) || 0;
+      var qty = parseQty(l.qty);
       var total = qty * (parseFloat(l.price) || 0);
       var r = '<tr>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;vertical-align:top;">' + dh;
       if (l.pn) r += '<br><span style="font-size:11px;color:#b8860b;">P/N: ' + escHtml(l.pn) + '</span>';
       r += '</td>';
-      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + (l.qty||'--') + '</td>';
+      r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:center;vertical-align:top;width:50px;">' + fmtQty(l.qty) + '</td>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + fmtCur(l.price) + '</td>';
       r += '<td style="padding:8px 10px;border-bottom:1px solid #e8e2d8;font-size:12pt;text-align:right;vertical-align:top;width:90px;">' + (total > 0 ? fmtCur(total) : '--') + '</td>';
       r += '</tr>';
@@ -3309,6 +3726,14 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
 }
 
 function matchVendorKey(v, sheet) {
+  // Sheet-name takes precedence for the two UCG-Hillsboro plants because
+  // both share the same Vendor column value ("UCG (United Container Group) - Hillsboro, TX").
+  // Without this, every UCG row would route to ucg_hillsboro and Bottles orders would be misrouted.
+  if (sheet) {
+    const s0 = sheet.toLowerCase();
+    if (s0 === "ucg-bottles") return "alliance_hillsboro";
+    if (s0 === "ucg-ibcs")    return "ucg_hillsboro";
+  }
   if (!v) return "";
   v = v.toLowerCase();
   if (v.includes("waterloo")) return "core_waterloo";
@@ -3342,6 +3767,7 @@ function matchVendorKey(v, sheet) {
   if (v.includes("enterprise marking") || v.includes("emp(") || v.includes("emp ")) return "emp_fishers";
   if (v.includes("tri-sure") || v.includes("trisure")) return "trisure";
   if (v.includes("advatech")) return "advatech_houston";
+  if (v.includes("kp pallet") || v.includes("kppallet")) return "kp_rockyriver";
   // Sheet-name fallbacks for when the vendor column is blank or uses a short name
   if (sheet) {
     const s = sheet.toLowerCase();
@@ -3355,6 +3781,7 @@ function matchVendorKey(v, sheet) {
     if (s.includes("enterprise marking") || s.includes("emp")) return "emp_fishers";
     if (s.includes("tri-sure") || s.includes("trisure")) return "trisure";
     if (s.includes("advatech")) return "advatech_houston";
+    if (s.includes("kp pallet") || s.includes("kppallet")) return "kp_rockyriver";
   }
   return "";
 }
