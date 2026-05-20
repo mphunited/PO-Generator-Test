@@ -1994,12 +1994,14 @@ const FILE_NAME     = "MPH Orders.xlsm";
 // NOTE: RECYCLING_DRIVE_ID uses the same SharePoint drive as MPH Orders.
 // If the Recycling file is in a different library, update RECYCLING_DRIVE_ID below.
 const RECYCLING_DRIVE_ID   = DRIVE_ID;
-const RECYCLING_FILE_NAME  = "MPH Recycling Drums.xlsx";
+const RECYCLING_FILE_NAME  = "MPH Recycling Drums.xlsm";
 const RECYCLING_STATUSES   = new Set(["PO REQUEST TO ACCOUNTING", "PO REVISION TO ACCOUNTING", "PO MOVING"]);
+// Recycling Drums file currently contains only the Coastal Container sheet.
+// The other recycling sheets (RRG, UCG, STS, SEC, GPC, 5 Star, Responsible Container)
+// were moved to a separate file "MPH Recycling IBCS.xlsx" which is NOT yet wired up.
+// When ready to import IBCS, add a second file source + restore those sheet names.
 const RECYCLING_SHEETS     = [
-  'Coastal Container','RRG(Rural Recycling Grinding)','UCG(United Container Group)',
-  'STS(Superior Tote Solutions)','SEC(SouthEast Container)','GPC(Great Plains Container)',
-  '5 Star','Responsible Container'
+  'Coastal Container'
 ];
 const POLL_INTERVAL = 30000;
 
