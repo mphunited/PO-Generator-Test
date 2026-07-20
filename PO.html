@@ -546,6 +546,7 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="core_calhoun">Core — Calhoun, GA (275/330 Bottles & IBCs, drums)</option>
             <option value="alliance_greenwood">Alliance Container — Greenwood, IN (275/330 Bottles)</option>
             <option value="alliance_hillsboro">UCG (United Container Group) - Bottles — Hillsboro, TX (275/330)</option>
+            <option value="ceres_hillsboro">Ceres Trading — Hillsboro, TX (IBC Parts)</option>
             <option value="ecog_houston">Eco Green — Houston, TX (275/330 Bottles)</option>
           </optgroup>
           <optgroup label="♻️ Rebottle & Washout Plants">
@@ -578,6 +579,9 @@ body { background: var(--bg); color: var(--ink); font-family: 'Aptos', 'Inter', 
             <option value="advatech_houston">Advatech Industries — Houston, TX</option>
             <option value="cpp_lakewales">CPP — Lake Wales, FL</option>
             <option value="kp_rockyriver">KP Pallet &amp; Packaging — Cleveland, OH</option>
+            <option value="ibc_gastonia">IBC Specialties — Gastonia, NC</option>
+            <option value="cbc_robstown">Coastal Bend Containers — Robstown, TX</option>
+            <option value="coastal_alvin_orders">Coastal Container Services — Alvin, TX (Regular Orders)</option>
           </optgroup>
         </select>
       </div>
@@ -747,19 +751,21 @@ const VENDORS = {
   core_calhoun:{name:"MPH United / Core -- Calhoun, GA",address:"185 East Rus Drive\nCalhoun, GA 30701",contact:"Raj Das",phone:"832-837-5104",email:"brijesh.singh@coreplastech.com; orders@mphunited.com",dockHours:"S/R Hours: 7am-3pm, first come/first serve.",dockContact:"Raj Das 832-837-5104 raj@coreplastech.com",notes:"275 & 330 gal Bottles & IBCs, poly drums.",leadContact:"Keith Ferrell",products:[{desc:"IBC 275 Gal -- New",pn:"",price:""},{desc:"IBC 330 Gal -- New",pn:"",price:""},{desc:"Poly Drum -- New",pn:"",price:""}]},
   alliance_greenwood:{name:"MPH United / Alliance Container -- Greenwood, IN",address:"2615 Endress Place\nGreenwood, IN 46143",contact:"Mike McGuire",phone:"765-243-1936",email:"jessica@ac-ibc.com; orders@mphunited.com",dockHours:"8:00am-2:00pm. Have MPH Load# for reference. Jessica Redden sends signed BOLs.",dockContact:"Mike McGuire michael@ac-ibc.com  765-243-1936\nDock Times: 8:00am – 2:00pm",notes:"IBC Bottles only 275 & 330. Own trucks within 100 miles. Outside local = Frontline. Under same roof as STS rebottle.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC Bottle 275 Gal -- New",price:""},{desc:"IBC Bottle 330 Gal -- New",price:""}]},
   alliance_hillsboro:{name:"MPH United / UCG (United Container Group) - Bottles -- Hillsboro, TX",address:"251 Industrial Loop\nHillsboro, TX 76645",contact:"Isabel Martinez",phone:"832-721-3423",email:"iguevara@alliance-ctx.com; ajibarra@unitedcontainergroup.com; yramirez@unitedcontainergroup.com; orders@mphunited.com",dockHours:"8:30-10:00am & 12:30-4:00pm. (!) CLOSED 11am-12pm for lunch. Email for dock appointment.",dockContact:"Isabel Martinez iguevara@alliance-ctx.com 832-721-3423\nDock Times: 8:30AM-10:00AM & 12:30PM-4:00PM, 11:00-12:00 Closed for lunch",notes:"IBC Bottles only 275 & 330. Building split: Front = UCG new bottles; Back = UCG rebottle/IBCS.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",price:""},{desc:"IBC Bottle 330 Gal -- New",price:""}]},
-  fivestar_bristow:{name:"MPH United / 5 Star Industrial Containers -- Bristow, OK",address:"502 Industrial Road\nBristow, OK 74010",contact:"Luis Rodriguez",phone:"469-543-8284",email:"lrodriguez@permiancontainers.com; aleos@achievedholdings.com; aibarra@permiancontainers.com; yramirez@unitedcontainergroup.com; orders@mphunited.com",dockHours:"Call for dock times. Has own trucks.",dockContact:"Luis Rodriguez lrodriguez@permiancontainers.com Cell 469-543-8284",notes:"Washout & Rebottle 275 & 330. Arnaldo Sr plant. Keeps MPH stock (AgChem bottles, drums, 5 gal jerrycans).",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
-  sec_cleveland:{name:"MPH United / SEC SouthEast Container -- Cleveland, MS",address:"1002 Charlie Capps Road\nCleveland, MS 38732",contact:"Luis Rodriguez / Juan (plant lead)",phone:"469-543-8284",email:"lrodriguez@permiancontainers.com; aleos@achievedholdings.com; aibarra@permiancontainers.com; orders@mphunited.com",dockHours:"First come, first serve: 7am-12pm and 1pm-4pm. Lunch 12pm-1pm.",dockContact:"Luis Rodriguez lrodriguez@permiancontainers.com Cell 469-543-8284\nFirst come, first serve: 7am-12noon and 1pm-4pm (Lunch 12noon-1:00pm)",notes:"Washout & Rebottle 275 gal. New plant May 2025. Keeps MPH bottle stock. (!) Correct zip is 38732 (not 38759).",leadContact:"Christina Bayne 251-978-0563",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""}]},
-  gpc_gardencity:{name:"MPH United / GPC Great Plains Container -- Garden City, KS",address:"2203 Humphrey Road\nGarden City, KS 67846",contact:"Luis Rodriguez",phone:"469-543-8284",email:"LRodriguez@greatplainscontainers.com; ALeos@greatplainscontainers.com; aibarra@permiancontainers.com; orders@mphunited.com; dharding@gphillipsandsons.com",dockHours:"S/R Hours: 7am-4pm.",dockContact:"Luis Rodriguez lrodriguez@greatplainscontainers.com Cell 469-543-8284\nS/R Hours 7am-4pm",notes:"Washout & Rebottle 135, 275, 330 gal. New plant Feb 2025. Keeps MPH stock (bottle and new 135g IBCs).",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 135 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""}]},
-  sts_greenwood:{name:"MPH United / STS Superior Tote Solutions -- Greenwood, IN",address:"2615 Endress Place\nGreenwood, IN 46143",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; orders@stsindiana.com; orders@mphunited.com",dockHours:"8:00am-2:00pm.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2\nDock Times: 8:00am – 2:00pm",notes:"Rebottle 275 & 330. Under same roof as Alliance. Own trucks within 100 miles. Outside local = Frontline.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""}]},
-  ucg_hillsboro:{name:"MPH United / UCG (United Container Group) - IBCS -- Hillsboro, TX",address:"251 Industrial Loop, Building B\nHillsboro, TX 76645",contact:"AJ Ibarra",phone:"281-515-2104",email:"ajibarra@unitedcontainergroup.com; orders@mphunited.com",dockHours:"By appointment. 8:00am-4:00pm. Lunch 12pm-1pm.",dockContact:"AJ Ibarra ajibarra@unitedcontainergroup.com 281-515-2104\nDock hours: Schedule an appointment / 8:00am to 4:00pm (lunch 12:00noon – 1:00pm)",notes:"Washout & Rebottle 275 & 330. Arnaldo Sr plant. Back side of building. Has own trucks. When ordering rebottles MPH orders bottles from UCG Bottles (front of building).",leadContact:"Christina Bayne 251-978-0563",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
+  ceres_hillsboro:{name:"Ceres Trading -- Hillsboro, TX",address:"251 Industrial Loop\nHillsboro, TX 76645",contact:"Isabel Martinez",phone:"832-721-3423",email:"jingceres88@gmail.com; mibarra@achievedholdings.com; tsuc.ibc@gmail.com; iguevara@alliance-ctx.com; orders@mphunited.com; ajibarra@unitedcontainergroup.com",dockHours:"8:30-10:00am & 12:30-4:00pm. (!) CLOSED 11am-12pm for lunch.",dockContact:"Isabel Martinez iguevara@alliance-ctx.com 832-721-3423\nDock Times: 8:30AM-10:00AM & 12:30PM-4:00PM, 11:00-12:00 Closed for lunch",notes:"IBC parts. Prices pulled from MPH Orders import (UCG-Bottles sheet).",leadContact:"",products:[]},
+  fivestar_bristow:{name:"MPH United / 5 Star Industrial Containers -- Bristow, OK",address:"502 Industrial Road\nBristow, OK 74010",contact:"Luis Rodriguez",phone:"469-543-8284",email:"lrodriguez@permiancontainers.com; aleos@achievedholdings.com; aibarra@achievedholdings.com; yramirez@unitedcontainergroup.com; knichols@unitedcontainergroup.com; orders@mphunited.com",dockHours:"Call for dock times. Has own trucks.",dockContact:"Luis Rodriguez lrodriguez@permiancontainers.com Cell 469-543-8284",notes:"Washout & Rebottle 275 & 330. Arnaldo Sr plant. Keeps MPH stock (AgChem bottles, drums, 5 gal jerrycans).",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
+  sec_cleveland:{name:"MPH United / SEC SouthEast Container -- Cleveland, MS",address:"1002 Charlie Capps Road\nCleveland, MS 38732",contact:"Luis Rodriguez / Juan (plant lead)",phone:"469-543-8284",email:"lrodriguez@permiancontainers.com; aleos@achievedholdings.com; aibarra@achievedholdings.com; yramirez@unitedcontainergroup.com; orders@mphunited.com",dockHours:"First come, first serve: 7am-12pm and 1pm-4pm. Lunch 12pm-1pm.",dockContact:"Luis Rodriguez lrodriguez@permiancontainers.com Cell 469-543-8284\nFirst come, first serve: 7am-12noon and 1pm-4pm (Lunch 12noon-1:00pm)",notes:"Washout & Rebottle 275 gal. New plant May 2025. Keeps MPH bottle stock. (!) Correct zip is 38732 (not 38759).",leadContact:"Christina Bayne 251-978-0563",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""}]},
+  gpc_gardencity:{name:"MPH United / GPC Great Plains Container -- Garden City, KS",address:"2203 Humphrey Road\nGarden City, KS 67846",contact:"Luis Rodriguez",phone:"469-543-8284",email:"LRodriguez@greatplainscontainers.com; ALeos@greatplainscontainers.com; aibarra@achievedholdings.com; yramirez@unitedcontainergroup.com; orders@mphunited.com; dharding@gphillipsandsons.com",dockHours:"S/R Hours: 7am-4pm.",dockContact:"Luis Rodriguez lrodriguez@greatplainscontainers.com Cell 469-543-8284\nS/R Hours 7am-4pm",notes:"Washout & Rebottle 135, 275, 330 gal. New plant Feb 2025. Keeps MPH stock (bottle and new 135g IBCs).",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 135 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""}]},
+  sts_greenwood:{name:"MPH United / STS Superior Tote Solutions -- Greenwood, IN",address:"2615 Endress Place\nGreenwood, IN 46143",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; april@stsindiana.com; orders@stsindiana.com; orders@mphunited.com",dockHours:"8:00am-2:00pm.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2\nDock Times: 8:00am – 2:00pm",notes:"Rebottle 275 & 330. Under same roof as Alliance. Own trucks within 100 miles. Outside local = Frontline.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""}]},
+  ucg_hillsboro:{name:"MPH United / UCG (United Container Group) - IBCS -- Hillsboro, TX",address:"251 Industrial Loop, Building B\nHillsboro, TX 76645",contact:"AJ Ibarra",phone:"281-515-2104",email:"ajibarra@unitedcontainergroup.com; ccurrington@unitedcontainergroup.com; orders@mphunited.com",dockHours:"By appointment. 8:00am-4:00pm. Lunch 12pm-1pm.",dockContact:"AJ Ibarra ajibarra@unitedcontainergroup.com 281-515-2104\nDock hours: Schedule an appointment / 8:00am to 4:00pm (lunch 12:00noon – 1:00pm)",notes:"Washout & Rebottle 275 & 330. Arnaldo Sr plant. Back side of building. Has own trucks. When ordering rebottles MPH orders bottles from UCG Bottles (front of building).",leadContact:"Christina Bayne 251-978-0563",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   ttw_odessa:{name:"MPH United / TTW Texas Tote Works -- Odessa, TX",address:"16691 W Basin Street\nOdessa, TX 79763",contact:"Carlos Montano",phone:"214-601-7576",email:"cmontano@permiancontainers.com; aibarra@achievedholdings.com; angela@permiancontainers.com; lrodriguez@permiancontainers.com; orders@mphunited.com",dockHours:"Call for dock times. CC Carlos on all emails to Angela Madrazo angela@permiancontainers.com 432-703-7434.",dockContact:"Carlos Montano cmontano@unitedcontainergroup.com Ph. 214-601-7576",notes:"Washout & Rebottle 275 & 330. New plant 1/2/25. Arnaldo Sr plant.",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   tld_socal:{name:"MPH United / TLD Ted Levine Drum Co -- South El Monte, CA",address:"1817 Chico Avenue\nSouth El Monte, CA 91733",contact:"Kim Jackson",phone:"626-579-1084 ext. 123",email:"david@tldrumco.com; kim@tldrumco.com; orders@mphunited.com",dockHours:"M-F 7am-2pm. Frontline needs appt from Kim Jackson.",dockContact:"Kim Jackson kim@tldrumco.com 626-579-1084 ext. 123\nShipping Hours: M-F / 7am-2pm",notes:"Rebottle & Washout 135/275/330; 275 rebottle. Steel & poly drum washout. Not a partner -- vendor only. Only customer is DeLaval 275s.",leadContact:"Keith Ferrell 801-900-7709",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC Washout",price:""},{desc:"Steel/Poly Drum -- Washout",price:""}]},
   rrg_stanwood:{name:"MPH United / RRG Rural Recycling & Grinding -- Stanwood, IA",address:"101 Forest Street\nStanwood, IA 52337",contact:"Michelle McCall",phone:"319.360.4571",email:"michelle@mphunited.com; lmccall@recyclinggrinding.com; orders@mphunited.com",dockHours:"",dockContact:"Michelle McCall admin@recyclinggrinding.com 319.360.4571",notes:"Rebottle 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""}]},
   clean_stlouis:{name:"MPH United / Clean Environmental -- St. Louis, MO",address:"4500 Fyler Ave\nSt. Louis, MO 63116",contact:"Tommy Hudson / Breana Rice",phone:"513-652-1903 / 314-775-1779",email:"brice@cleanenvironmentalmanagementllc.com; ghudson@cleanenvironmentalmanagementllc.com; orders@mphunited.com",dockHours:"(!) EMAIL BREANA (not Tommy). Mon-Thurs 6:30am-1:30pm. Friday by approval only 6:30-10:30am. Warehouse UNMANNED as of Aug 2025.",dockContact:"Tommy Hudson 513-652-1903",notes:"Washout & Rebottle 275 & 330, 55 gal TH poly drums. Secondary unmanned location: 3211 S Kingshighway Blvd -- must call before delivery.",leadContact:"Suzanne Ridenhour 251.413.6058",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"55 Gal TH Poly Drum -- Washout",price:""}]},
-  sts_summitville:{name:"MPH United / STS Superior Tote Solutions -- Summitville, IN",address:"401 North Main Street\nSummitville, IN 46070",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; bailey@stsindiana.com; orders@stsindiana.com; orders@mphunited.com",dockHours:"Own trucks within 100 miles.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2",notes:"Washout 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Washout",price:""}]},
+  sts_summitville:{name:"MPH United / STS Superior Tote Solutions -- Summitville, IN",address:"401 North Main Street\nSummitville, IN 46070",contact:"Kelly Burcharts",phone:"765-536-8088 ext. 2",email:"kelly@stsindiana.com; shawn@stsindiana.com; bailey@stsindiana.com; april@stsindiana.com; orders@stsindiana.com; orders@mphunited.com",dockHours:"Own trucks within 100 miles.",dockContact:"Kelly Burcharts kelly@stsindiana.com 765-536-8088 ext. 2",notes:"Washout 275 only.",leadContact:"Suzanne Ridenour 251-413-6058",products:[{desc:"IBC 275 Gal -- Washout",price:""}]},
   centurion_lewisburg:{name:"MPH United / Centurion -- Lewisburg, TN",address:"671 Garrett Parkway\nLewisburg, TN 37091",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY.",leadContact:"Suzanne Ridenour 251-413-6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
   centurion_memphis:{name:"MPH United / Centurion -- Memphis, TN",address:"285 Trigg Avenue\nMemphis, TN 38106",contact:"Mike Wade",phone:"931-619-1024",email:"clint.cowley@centurioncontainer.com; Zac.Hennessy@centurioncontainer.com; orders@mphunited.com",dockHours:"(!) CPU ONLY",dockContact:"Mike Wade 931-619-1024",notes:"Washout 275 & 330. CPU ONLY. Typically uses Core Waterloo bottles (work better in cages than Alliance).",leadContact:"Suzanne Ridenour 251.413.6058 & Christina Bayne",products:[{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
-  coastal_alvin:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com; jack@mphunited.com; david@mphunited.com; mike@mphunited.com",dockHours:"Call Tommy Spalding",dockContact:"APPT REQUIRED - Call ASAP  Tom Spalding (903) 275-6213 tommy@ccontainertx.com",notes:"Drum recycling only.",leadContact:"Matt Cozik 517.230.9405",products:[{desc:"Drum Recycle Service",price:""}]},
+  coastal_alvin:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com; jack@mphunited.com; david@mphunited.com; mike@mphunited.com",dockHours:"Call Tommy Spalding",dockContact:"APPT REQUIRED - Call ASAP  Tom Spalding (903) 275-6213 tommy@ccontainertx.com",notes:"Drum Recycling Service only (imports from MPH Recycling Drums file). For regular container orders see the 'coastal_alvin_orders' vendor entry.",leadContact:"Matt Cozik 517.230.9405",products:[{desc:"Drum Recycle Service",price:""}]},
+  coastal_alvin_orders:{name:"MPH United / Coastal Container Services -- Alvin, TX",address:"892 County Road 281\nAlvin, TX 77511",contact:"Tommy Spalding",phone:"409-599-2120 / 903-275-6213",email:"orders@ccontainertx.com; orders@mphunited.com",dockHours:"Call Tommy Spalding",dockContact:"APPT REQUIRED - Call ASAP  Tom Spalding (903) 275-6213 tommy@ccontainertx.com",notes:"Regular container orders (imports from MPH Orders file, 'Coastal Container' tab). Separate from the Drum Recycling Service entry ('coastal_alvin') so CC lists don't cross over.",leadContact:"Matt Cozik 517.230.9405",products:[{desc:"",price:""}]},
   gjl_sts:{name:"GJL",address:"",contact:"Tony Suen",phone:"",email:"tsuc.ibc@gmail.com; michael@ac-ibc.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   engy_houston:{name:"ENGY Container Products",address:"2425 Mowery Rd\nHouston, TX 77045",contact:"",phone:"",email:"customerservice@engycontainers.com; pmckelvy@engycontainers.com; gcervantes@engygrp.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   presley_sikeston:{name:"Presley Enterprises",address:"1101 School St\nSikeston, MO 63801",contact:"Kevin Presley",phone:"",email:"kevin@presleyent.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
@@ -770,7 +776,9 @@ const VENDORS = {
   cpp_lakewales:{name:"CPP",address:"PO Box 3752\nLake Wales, FL 33859",contact:"Gary Yarbrough – (863) 638-6335",phone:"(863) 638-6335",email:"so@cpp-usa.com; david@cpp-usa.com; gary@cpp-usa.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"",price:""}]},
   advatech_houston:{name:"MPH United / Advatech Industries",address:"9159 Wallisville Road\nHouston TX, 77029",contact:"Darshan Advatech - 713-282-4182",phone:"713-282-4182",email:"darshan@advatechindustries.com; orders@mphunited.com",dockHours:"",notes:"",products:[{desc:"IBC",price:""}]},
   ecog_houston:{name:"MPH United / Eco Green -- Houston, TX",address:"12221 N. Houston Rosslyn Road\nBLDG K\nHouston, TX 77086",contact:"Sam Amir",phone:"832.228.3532",email:"sam@ecogreenpkg.com; orders@mphunited.com",dockHours:"Have MPH PO# for reference.",dockContact:"Sam Amir sam@ecogreenpkg.com 832.228.3532",notes:"IBC Bottles 275 & 330 Only.",leadContact:"Christina Bayne 251.978.0563",products:[{desc:"IBC Bottle 275 Gal -- New",pn:"",price:""},{desc:"IBC Bottle 330 Gal -- New",pn:"",price:""}]},
-  kp_rockyriver:{name:"MPH United / KP Pallet & Packaging",address:"4650 Lakeside Avenue\nCleveland, OH 44114",contact:"Melanie Miller",phone:"(216) 906-3322",email:"mel@kppallet.com; orders@mphunited.com",dockHours:"7:00am – 3:00pm Monday–Friday",dockContact:"Melanie Miller mel@kppallet.com (216) 906-3322",notes:"Carrier contact only for dock times.",leadContact:"",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]}
+  kp_rockyriver:{name:"MPH United / KP Pallet & Packaging",address:"4650 Lakeside Avenue\nCleveland, OH 44114",contact:"Melanie Miller",phone:"(216) 906-3322",email:"mel@kppallet.com; orders@mphunited.com",dockHours:"7:00am – 3:00pm Monday–Friday",dockContact:"Melanie Miller mel@kppallet.com (216) 906-3322",notes:"Carrier contact only for dock times.",leadContact:"",products:[{desc:"IBC 275 Gal -- Rebottle",price:""},{desc:"IBC 330 Gal -- Rebottle",price:""},{desc:"IBC 275 Gal -- Washout",price:""},{desc:"IBC 330 Gal -- Washout",price:""}]},
+  ibc_gastonia:{name:"MPH United / IBC Specialties -- Gastonia, NC",address:"101 Boxwood Lane\nGastonia, NC 28054",contact:"Jimmy White",phone:"704-865-0777",email:"ibcspec@att.net; orders@mphunited.com",dockHours:"Contact Jimmy White for dock times.",dockContact:"Jimmy White ibcspec@att.net 704-865-0777",notes:"",leadContact:"",products:[{desc:"IBC",price:""}]},
+  cbc_robstown:{name:"MPH United / Coastal Bend Containers -- Robstown, TX",address:"450 Industrial Avenue\nRobstown, TX 78380",contact:"Fred Murray",phone:"361-261-2134",email:"fred@coastalbendcontainers.com; orders@mphunited.com",dockHours:"Loading Hours: 7:00am-1:00pm. Plant likes to know ETA when truck will be onsite to prepare.",dockContact:"Willie Lewis (Shop Manager) 361-261-2134. BOLs sent to Fred Murray fred@coastalbendcontainers.com",notes:"Plant likes to know an ETA of when truck will be onsite to prepare.",leadContact:"",products:[{desc:"IBC",price:""}]}
 };
 
 // -- VENDOR GREETINGS -------------------------------------------------------
@@ -808,6 +816,8 @@ const VENDOR_GREETINGS = {
   "MPH United / Advatech Industries":                         "Darshan",
   "MPH United / Eco Green -- Houston, TX":                    "Sam",
   "MPH United / KP Pallet & Packaging":                      "Melanie",
+  "MPH United / IBC Specialties -- Gastonia, NC":            "Jimmy",
+  "MPH United / Coastal Bend Containers -- Robstown, TX":    "Fred",
 };
 function getVendorGreeting(vendor) {
   if (!vendor || !vendor.name) return '';
@@ -911,7 +921,8 @@ const BLIND_VENDOR_KEYS = [
   'core_houston','core_nashua','core_shreveport','core_southholland','core_waterloo','core_calhoun',
   'advatech_houston',
   'ecog_houston',
-  'tld_socal'
+  'tld_socal',
+  'cbc_robstown'
 ];
 
 function isCore(key) { return CORE_VENDOR_KEYS.includes(key); }
@@ -1204,6 +1215,9 @@ async function generatePO(silent = false) {
   const vendorKey = document.getElementById('vendorSelect').value;
   if (!customerName) { if (!silent) alert('Please select or enter a customer name.'); return; }
   if (!vendorKey) { if (!silent) alert('Please select a vendor.'); return; }
+  if (!document.getElementById('shipDate').value && !silent) {
+    if (!confirm('⚠ No Ship Date is set.\n\nGenerate the PO anyway with Ship Date shown as "--"?')) return;
+  }
 
   const vendor = VENDORS[vendorKey];
   const lines = getLines();
@@ -2014,7 +2028,8 @@ const VENDOR_SHEETS = [
   'GPCN(Great Plains Northstar-SD)','AgTank Solutions-Pumps',
   'Basco','Container Connectionz','Tri-Sure','EMP(Enterprise Marking Product)',
   'Presley Enterprises','ENGY Container Products','ECO Green','CPP',
-  'KP Pallet & Packaging','Advatech'
+  'KP Pallet & Packaging','Advatech',
+  'IBC Specialties','Coastal Bend Containers','Coastal Container'
 ];
 
 let msalInstance   = null;
@@ -2070,7 +2085,19 @@ async function getToken() {
   try {
     const r = await msalInstance.acquireTokenSilent({ scopes: GRAPH_SCOPES, account: accounts[0] });
     return r.accessToken;
-  } catch(e) { return null; }
+  } catch(e) {
+    // Silent renewal failed (token expired, network hiccup, etc.) — log it and
+    // try an interactive popup so the user doesn't have to manually re-sign in.
+    console.warn("[PO] acquireTokenSilent failed, falling back to popup:", e.message || e);
+    if (isMobileDevice()) return null; // no popup on mobile — caller will show sign-in prompt
+    try {
+      const r = await msalInstance.acquireTokenPopup({ scopes: GRAPH_SCOPES });
+      return r.accessToken;
+    } catch(e2) {
+      console.error("[PO] acquireTokenPopup also failed:", e2.message || e2);
+      return null;
+    }
+  }
 }
 
 // Acquires a Mail.ReadWrite token.
@@ -2695,6 +2722,52 @@ function updateImportFooter() {
   }
 }
 
+// ── FORM RESET & IMPORT HELPERS ─────────────────────────────────────────────
+// Clears every order-specific field so nothing carries over from a previously
+// loaded PO. Called at the top of every import-load flow. Blank in Excel must
+// mean blank on the PO — never inherited from the last order.
+function resetOrderForm() {
+  ["customerPO","partNumber","salesOrder","apptTime","shipDate","etaDate",
+   "shipTo","customerEmail","specialInstructions","revisedPONum"].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = "";
+  });
+  document.getElementById("isBlindShipment").checked = false;
+  document.getElementById("isRevised").checked = false;
+  document.getElementById("isMoveOrders").checked = false;
+  document.getElementById("revisedPOField").style.display = "none";
+  lastLoadedMphPO = "";
+  // Ship Via: drop any custom option added by a previous import, back to default
+  const sv = document.getElementById("shipVia");
+  Array.from(sv.options).forEach(op => { if (op.dataset.custom) op.remove(); });
+  sv.selectedIndex = 0;
+}
+
+// Sets Ship Via from the imported Freight cell. Custom (non-matching) carriers
+// are added as a tagged option so resetOrderForm can remove them later instead
+// of letting them pile up in the dropdown.
+function setShipViaFromFreight(freight) {
+  if (!freight) return;
+  const el = document.getElementById("shipVia");
+  const f = freight.toLowerCase();
+  const m = Array.from(el.options).find(op => op.value.toLowerCase().includes(f) || f.includes(op.value.toLowerCase()));
+  if (m) { el.value = m.value; return; }
+  const n = document.createElement("option");
+  n.value = freight; n.textContent = freight; n.dataset.custom = "1";
+  el.appendChild(n); el.value = freight;
+}
+
+// Sets Ship Date from the imported cell. If missing or unparseable, the field
+// is left BLANK (never inherits the previous order's date) and a warning pops.
+function setShipDateField(raw) {
+  const d = parseToInputDate(raw);
+  document.getElementById("shipDate").value = d || "";
+  if (!d) {
+    showToast(raw
+      ? "⚠ Ship Date \"" + raw + "\" couldn't be read from Excel — please enter it manually."
+      : "⚠ No Ship Date on the imported order — please enter it manually.", 8000);
+  }
+}
+
 async function loadSelectedOrder() {
   if (importSelectedIdxs.length === 0) return;
   // Clear any leftover multi-PO output
@@ -2704,40 +2777,27 @@ async function loadSelectedOrder() {
   multiPOEmailData = null;
   const o = importFiltered[importSelectedIdxs[0]];
   currentOrderIsCoastal = (o.source === 'recycling' && o.sheet === 'Coastal Container');
-  document.getElementById("isBlindShipment").checked = false;
-  document.getElementById("isRevised").checked = false;
-  document.getElementById("isMoveOrders").checked = false;
-  document.getElementById("revisedPOField").style.display = "none";
-  document.getElementById("revisedPONum").value = "";
+  resetOrderForm();
   document.getElementById("customerSearch").value = o.customer||"";
   document.getElementById("selectedCustomerName").value = o.customer||"";
   const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o.customer||"").toLowerCase());
   if (cm) { selectCustomer(cm.name); }
   else {
-    if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
-    if (o.contacts) document.getElementById("customerEmail").value = parseCustomerContacts(o.contacts).email;
+    document.getElementById("customerEmail").value = o.contacts ? parseCustomerContacts(o.contacts).email : "";
     document.getElementById("customerCard").classList.remove("active");
   }
-  if (o.cust_po) document.getElementById("customerPO").value = o.cust_po;
+  document.getElementById("customerPO").value = o.cust_po || "";
   lastLoadedMphPO = o.mph_po || '';
-  if (document.getElementById('isRevised').checked && lastLoadedMphPO) {
-    document.getElementById('revisedPONum').value = lastLoadedMphPO;
-  }
-  if (o.pn) document.getElementById("partNumber").value = o.pn;
-  if (o.alliance_so) document.getElementById("salesOrder").value = o.alliance_so;
-  if (o.appt) document.getElementById("apptTime").value = o.appt;
-  const _sd = parseToInputDate(o.ship_date); if (_sd) document.getElementById("shipDate").value = _sd;
-  const _wd = parseToInputDate(o.wanted_date); if (_wd) document.getElementById("etaDate").value = _wd;
+  document.getElementById("partNumber").value = o.pn || "";
+  document.getElementById("salesOrder").value = o.alliance_so || "";
+  document.getElementById("apptTime").value = o.appt || "";
+  setShipDateField(o.ship_date);
+  const _wd = parseToInputDate(o.wanted_date); document.getElementById("etaDate").value = _wd || "";
   if (o.ship_to) document.getElementById("shipTo").value = o.ship_to;
   document.getElementById("specialInstructions").value = o.po_notes || "";
-  const vk = matchVendorKey(o.vendor, o.sheet);
+  const vk = matchVendorKey(o.vendor, o.sheet, o.source);
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
-  if (o.freight) {
-    const el = document.getElementById("shipVia");
-    const m = Array.from(el.options).find(op => op.value.toLowerCase().includes(o.freight.toLowerCase()) || o.freight.toLowerCase().includes(op.value.toLowerCase()));
-    if (m) el.value = m.value;
-    else { const n=document.createElement("option"); n.value=o.freight; n.textContent=o.freight; el.appendChild(n); el.value=o.freight; }
-  }
+  setShipViaFromFreight(o.freight);
   const body = document.getElementById("lineBody");
   body.innerHTML = "";
   const ck = isCore(vk);
@@ -2772,11 +2832,7 @@ async function loadAsSplitLoad() {
   const rawOrders = selIdxs.map(i => importFiltered[i]);
   const o1 = rawOrders[0];
   const pp = s => parseNum(s);
-  document.getElementById("isBlindShipment").checked = false;
-  document.getElementById("isRevised").checked = false;
-  document.getElementById("isMoveOrders").checked = false;
-  document.getElementById("revisedPOField").style.display = "none";
-  document.getElementById("revisedPONum").value = "";
+  resetOrderForm();
 
   // Customer / contact from first order
   document.getElementById("customerSearch").value = o1.customer||"";
@@ -2784,22 +2840,18 @@ async function loadAsSplitLoad() {
   const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o1.customer||"").toLowerCase());
   if (cm) { selectCustomer(cm.name); }
   else {
-    if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
-    if (o1.contacts) document.getElementById("customerEmail").value = parseCustomerContacts(o1.contacts).email;
+    document.getElementById("customerEmail").value = o1.contacts ? parseCustomerContacts(o1.contacts).email : "";
     document.getElementById("customerCard").classList.remove("active");
   }
 
   // Header fields from first order
-  if (o1.cust_po) document.getElementById("customerPO").value = o1.cust_po;
+  document.getElementById("customerPO").value = o1.cust_po || "";
   lastLoadedMphPO = o1.mph_po || '';
-  if (document.getElementById('isRevised').checked && lastLoadedMphPO) {
-    document.getElementById('revisedPONum').value = lastLoadedMphPO;
-  }
-  if (o1.pn) document.getElementById("partNumber").value = o1.pn;
-  if (o1.alliance_so) document.getElementById("salesOrder").value = o1.alliance_so;
-  if (o1.appt) document.getElementById("apptTime").value = o1.appt;
-  const _sd2 = parseToInputDate(o1.ship_date); if (_sd2) document.getElementById("shipDate").value = _sd2;
-  const _wd2 = parseToInputDate(o1.wanted_date); if (_wd2) document.getElementById("etaDate").value = _wd2;
+  document.getElementById("partNumber").value = o1.pn || "";
+  document.getElementById("salesOrder").value = o1.alliance_so || "";
+  document.getElementById("apptTime").value = o1.appt || "";
+  setShipDateField(o1.ship_date);
+  const _wd2 = parseToInputDate(o1.wanted_date); document.getElementById("etaDate").value = _wd2 || "";
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
   // Notes: if all non-empty notes are identical, show once; otherwise label by load number
@@ -2819,16 +2871,11 @@ async function loadAsSplitLoad() {
   document.getElementById("specialInstructions").value = splitNotesText;
 
   // Vendor from first order
-  const vk = matchVendorKey(o1.vendor, o1.sheet);
+  const vk = matchVendorKey(o1.vendor, o1.sheet, o1.source);
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
 
   // Freight from first order
-  if (o1.freight) {
-    const el = document.getElementById("shipVia");
-    const m = Array.from(el.options).find(op => op.value.toLowerCase().includes(o1.freight.toLowerCase()) || o1.freight.toLowerCase().includes(op.value.toLowerCase()));
-    if (m) el.value = m.value;
-    else { const n=document.createElement("option"); n.value=o1.freight; n.textContent=o1.freight; el.appendChild(n); el.value=o1.freight; }
-  }
+  setShipViaFromFreight(o1.freight);
 
   // One line item per selected order, labeled SPLIT LOAD N
   const body = document.getElementById("lineBody");
@@ -2877,11 +2924,7 @@ async function loadSplitAndGenerateMultiple() {
   setLoading(false);
 
   // ── Populate the PO builder exactly like loadAsSplitLoad ──
-  document.getElementById("isBlindShipment").checked = false;
-  document.getElementById("isRevised").checked = false;
-  document.getElementById("isMoveOrders").checked = false;
-  document.getElementById("revisedPOField").style.display = "none";
-  document.getElementById("revisedPONum").value = "";
+  resetOrderForm();
 
   // Customer / contact from first order
   document.getElementById("customerSearch").value = o1.customer || "";
@@ -2889,20 +2932,19 @@ async function loadSplitAndGenerateMultiple() {
   const cm = CUSTOMERS.find(c => c.name.toLowerCase() === (o1.customer || "").toLowerCase());
   if (cm) { selectCustomer(cm.name); }
   else {
-    if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
-    if (o1.contacts) document.getElementById("customerEmail").value = parseCustomerContacts(o1.contacts).email;
+    document.getElementById("customerEmail").value = o1.contacts ? parseCustomerContacts(o1.contacts).email : "";
     document.getElementById("customerCard").classList.remove("active");
   }
 
   // Header fields — join all customer POs for multi-number split loads
   const custPOs = rawOrders.map(o => o.cust_po).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i);
-  if (custPOs.length) document.getElementById("customerPO").value = custPOs.join(" / ");
+  document.getElementById("customerPO").value = custPOs.join(" / ");
   lastLoadedMphPO = o1.mph_po || '';
-  if (o1.pn) document.getElementById("partNumber").value = o1.pn;
-  if (o1.alliance_so) document.getElementById("salesOrder").value = o1.alliance_so;
-  if (o1.appt) document.getElementById("apptTime").value = o1.appt;
-  const _sd = parseToInputDate(o1.ship_date); if (_sd) document.getElementById("shipDate").value = _sd;
-  const _wd = parseToInputDate(o1.wanted_date); if (_wd) document.getElementById("etaDate").value = _wd;
+  document.getElementById("partNumber").value = o1.pn || "";
+  document.getElementById("salesOrder").value = o1.alliance_so || "";
+  document.getElementById("apptTime").value = o1.appt || "";
+  setShipDateField(o1.ship_date);
+  const _wd = parseToInputDate(o1.wanted_date); document.getElementById("etaDate").value = _wd || "";
   if (o1.ship_to) document.getElementById("shipTo").value = o1.ship_to;
 
   // Notes: if all non-empty notes are identical show once, otherwise label by load
@@ -2920,16 +2962,11 @@ async function loadSplitAndGenerateMultiple() {
   document.getElementById("specialInstructions").value = splitNotesText;
 
   // Vendor from first order
-  const vk = matchVendorKey(o1.vendor, o1.sheet);
+  const vk = matchVendorKey(o1.vendor, o1.sheet, o1.source);
   if (vk) { document.getElementById("vendorSelect").value = vk; loadVendor(); }
 
   // Freight from first order
-  if (o1.freight) {
-    const el = document.getElementById("shipVia");
-    const m = Array.from(el.options).find(op => op.value.toLowerCase().includes(o1.freight.toLowerCase()) || o1.freight.toLowerCase().includes(op.value.toLowerCase()));
-    if (m) el.value = m.value;
-    else { const n = document.createElement("option"); n.value = o1.freight; n.textContent = o1.freight; el.appendChild(n); el.value = o1.freight; }
-  }
+  setShipViaFromFreight(o1.freight);
 
   // One line item per selected order, labeled SPLIT LOAD N
   const body = document.getElementById("lineBody");
@@ -2993,7 +3030,7 @@ async function loadSplitAndRegular() {
   const regularRaw = importFiltered[regularIdxs[0]]; // use first regular row
   const pp = s => parseFloat(parseNum(s)) || 0;
 
-  const vk = matchVendorKey(splitRaws[0].vendor, splitRaws[0].sheet);
+  const vk = matchVendorKey(splitRaws[0].vendor, splitRaws[0].sheet, splitRaws[0].source);
   const vendor = VENDORS[vk] || { name: splitRaws[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
 
   // Auto-blind for vendors in BLIND_VENDOR_KEYS (mirrors loadVendor logic since
@@ -3151,7 +3188,7 @@ async function generateMultiplePOs(fromCheckbox = false) {
   const rawOrders = selIdxs.map(i => importFiltered[i]);
   const pp = s => parseFloat(parseNum(s)) || 0;
 
-  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet);
+  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet, rawOrders[0].source);
   const vendor = VENDORS[vk] || { name: rawOrders[0].vendor||'', address:'', contact:'', email:'', phone:'', dockHours:'', products:[] };
 
   // Reset checkboxes only when loading fresh orders from the import panel
@@ -3275,8 +3312,8 @@ async function loadAsMultiShipTo(fromCheckbox = false) {
   const o1 = rawOrders[0];
 
   // ── Vendor consistency guard ──
-  const vKey0 = matchVendorKey(o1.vendor || '', o1.sheet || '');
-  const vKeys = rawOrders.map(o => matchVendorKey(o.vendor || '', o.sheet || ''));
+  const vKey0 = matchVendorKey(o1.vendor || '', o1.sheet || '', o1.source);
+  const vKeys = rawOrders.map(o => matchVendorKey(o.vendor || '', o.sheet || '', o.source));
   if (vKeys.some(k => k !== vKey0)) {
     showToast('All selected rows must share the same vendor for a Multi Ship-To load. Adjust your selection.', 6000);
     return;
@@ -3736,7 +3773,7 @@ async function loadAsWashReturn() {
   const pp = s => parseNum(s);
 
   // Vendor from first order
-  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet);
+  const vk = matchVendorKey(rawOrders[0].vendor, rawOrders[0].sheet, rawOrders[0].source);
   const vendor = vk ? VENDORS[vk] : null;
   if (!vendor) { alert("Could not match a vendor for this Wash & Return order. Please verify the vendor on order 1."); return; }
 
@@ -3893,10 +3930,13 @@ function buildWRVendorEmailHtml(orders, vendor, poNum) {
   return h;
 }
 
-function matchVendorKey(v, sheet) {
+function matchVendorKey(v, sheet, source) {
   // Sheet-name takes precedence for the two UCG-Hillsboro plants because
   // both share the same Vendor column value ("UCG (United Container Group) - Hillsboro, TX").
   // Without this, every UCG row would route to ucg_hillsboro and Bottles orders would be misrouted.
+  // Ceres Trading shares the UCG-Bottles sheet; vendor-column match must run
+  // BEFORE the sheet hard-route or Ceres rows would misroute to alliance_hillsboro.
+  if (v && v.toLowerCase().includes("ceres")) return "ceres_hillsboro";
   if (sheet) {
     const s0 = sheet.toLowerCase();
     if (s0 === "ucg-bottles") return "alliance_hillsboro";
@@ -3925,7 +3965,8 @@ function matchVendorKey(v, sheet) {
   if (v.includes("clean environmental")) return "clean_stlouis";
   if (v.includes("centurion") && v.includes("lewisburg")) return "centurion_lewisburg";
   if (v.includes("centurion") && v.includes("memphis")) return "centurion_memphis";
-  if (v.includes("coastal")) return "coastal_alvin";
+  if (v.includes("coastal bend")) return "cbc_robstown";
+  if (v.includes("coastal")) return source === 'recycling' ? "coastal_alvin" : "coastal_alvin_orders";
   if (v.includes("eco green") || v.includes("ecogreen")) return "ecog_houston";
   if (v.includes("basco")) return "basco";
   if (v.includes("cpp") || v.includes("cpp-usa") || v.includes("cpp usa")) return "cpp_lakewales";
@@ -3936,6 +3977,7 @@ function matchVendorKey(v, sheet) {
   if (v.includes("tri-sure") || v.includes("trisure")) return "trisure";
   if (v.includes("advatech")) return "advatech_houston";
   if (v.includes("kp pallet") || v.includes("kppallet")) return "kp_rockyriver";
+  if (v.includes("ibc specialties")) return "ibc_gastonia";
   // Sheet-name fallbacks for when the vendor column is blank or uses a short name
   if (sheet) {
     const s = sheet.toLowerCase();
@@ -3950,6 +3992,9 @@ function matchVendorKey(v, sheet) {
     if (s.includes("tri-sure") || s.includes("trisure")) return "trisure";
     if (s.includes("advatech")) return "advatech_houston";
     if (s.includes("kp pallet") || s.includes("kppallet")) return "kp_rockyriver";
+    if (s.includes("ibc specialties")) return "ibc_gastonia";
+    if (s.includes("coastal bend")) return "cbc_robstown";
+    if (s.includes("coastal")) return source === 'recycling' ? "coastal_alvin" : "coastal_alvin_orders";
   }
   return "";
 }
